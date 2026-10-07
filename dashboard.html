@@ -22,9 +22,9 @@ main{max-width:1580px;margin:0 auto;padding:26px 40px 68px}.section{margin:0 0 4
 .empty{border:1px dashed #cab9a8;background:#fbf4ec;border-radius:22px;padding:54px 24px;text-align:center;color:var(--muted)}.empty strong{display:block;color:var(--ink);font:700 26px Georgia,serif;margin-bottom:8px}.tbu-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.tbu-card{background:#f8f1e9;border:1px dashed #cdbbaa;border-radius:18px;padding:18px}.tbu-card .value{font-size:24px;color:#8b7e72;font-weight:800}
 .breakdown-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:13px}.breakdown-item{border:1px solid var(--line);background:#fffaf5;border-radius:14px;padding:11px 12px}.breakdown-item .bn{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:900}.breakdown-item .bs{font-size:13px;font-weight:850;margin-top:4px}.breakdown-item .live{color:var(--green)}.breakdown-item .tbu{color:#8b7e72}
 .cut-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.mini-chart{height:230px}.rank{font-size:10px;color:var(--muted);font-weight:800;margin-right:7px}
-.footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:11px;line-height:1.5}
+.ai-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.ai-btn{appearance:none;border:0;background:linear-gradient(135deg,var(--orange),#f07a37);color:#fff;border-radius:999px;padding:11px 17px;font-weight:900;cursor:pointer;box-shadow:0 10px 24px rgba(219,91,29,.22)}.ai-btn:disabled{opacity:.58;cursor:wait}.ai-btn.secondary{background:var(--navy);box-shadow:none}.ai-status{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:850}.ai-panel{background:linear-gradient(145deg,#102a3d,#091d2c);color:#fff;border:1px solid #24485e;border-radius:26px;padding:24px;box-shadow:0 22px 48px rgba(7,24,36,.18)}.ai-panel h3{font:700 27px Georgia,serif;margin:0 0 10px}.ai-panel .ai-copy{color:#e2d6cb;font-size:14px;line-height:1.68;white-space:pre-line}.ai-columns{display:grid;grid-template-columns:1.4fr .9fr .9fr;gap:16px;margin-top:18px}.ai-mini{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);border-radius:17px;padding:15px}.ai-mini h4{color:#ffb082;margin:0 0 9px;font-size:10px;text-transform:uppercase;letter-spacing:.11em}.ai-mini ul{margin:0;padding-left:18px;color:#e8ddd3;font-size:12px;line-height:1.55}.ai-inline{margin:-4px 0 16px;background:#fff4e9;border-left:4px solid var(--orange);border-radius:0 14px 14px 0;padding:11px 14px;color:#5f5146;font-size:12px;line-height:1.55}.ai-inline b{color:var(--ink)}.science-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.science-callout{margin-top:12px;padding:12px 14px;border-radius:15px;background:#fff3e7;border:1px solid #edd2bd;color:#5e5146;font-size:12px;line-height:1.5}.science-callout strong{color:var(--ink)}.heatmap{display:grid;gap:5px}.heat-row{display:grid;grid-template-columns:72px repeat(3,1fr);gap:5px;align-items:stretch}.heat-label{font-size:10px;color:var(--muted);display:flex;align-items:center}.heat-cell{border-radius:10px;padding:9px 7px;text-align:center;border:1px solid rgba(0,0,0,.05);min-height:48px}.heat-cell .hc-main{font-size:13px;font-weight:900}.heat-cell .hc-sub{font-size:9px;opacity:.78;margin-top:2px}.science-legend{display:flex;gap:12px;font-size:10px;color:var(--muted);margin-top:8px}.science-legend span{display:inline-flex;align-items:center;gap:5px}.swatch{width:9px;height:9px;border-radius:50%;display:inline-block}.provider-pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:900;background:rgba(255,255,255,.1);color:#f4dfd1}.footer{border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:11px;line-height:1.5}
 @media(max-width:1280px){.kpis{grid-template-columns:repeat(4,1fr)}.delta-strip{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:980px){.top,.grid2,.grid3,.sku-grid,.cut-grid{grid-template-columns:1fr}.breakdown-grid{grid-template-columns:repeat(3,1fr)}.meta{text-align:left}.section-head{display:block}.section-head p{text-align:left;margin-top:5px}.platform-cards{grid-template-columns:1fr}.funnel{grid-template-columns:1fr 1fr}.sku-kpis{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:980px){.top,.grid2,.grid3,.sku-grid,.cut-grid,.science-grid,.ai-columns{grid-template-columns:1fr}.breakdown-grid{grid-template-columns:repeat(3,1fr)}.meta{text-align:left}.section-head{display:block}.section-head p{text-align:left;margin-top:5px}.platform-cards{grid-template-columns:1fr}.funnel{grid-template-columns:1fr 1fr}.sku-kpis{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:620px){header,main{padding-left:18px;padding-right:18px}.breakdown-grid{grid-template-columns:1fr 1fr}h1{font-size:34px}.kpis{grid-template-columns:1fr 1fr}.delta-strip,.funnel,.tbu-kpis{grid-template-columns:1fr}.sku-kpis{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -50,6 +50,31 @@ main{max-width:1580px;margin:0 auto;padding:26px 40px 68px}.section{margin:0 0 4
     <div id="breakdownCoverage" class="breakdown-grid"></div>
   </div>
   <div id="executive"></div>
+</section>
+
+<section class="section" id="aiExecutiveSection">
+  <div class="section-head">
+    <div><h2>AI Executive Brief</h2><p>Generates a fresh client-ready read from every populated section and ties the signals together.</p></div>
+    <div class="ai-head-actions"><span id="aiProviderStatus" class="ai-status">Ready</span><button id="aiBriefBtn" class="ai-btn">Generate Executive Brief</button></div>
+  </div>
+  <div id="aiExecutivePanel" class="ai-panel">
+    <h3 id="aiHeadline">One-click executive analysis</h3>
+    <div id="aiExecutiveCopy" class="ai-copy">Click Generate Executive Brief. The analysis will use the current Meta and Google data, SKU economics, funnel, campaigns, audiences, creatives and all available cuts.</div>
+    <div class="ai-columns">
+      <div class="ai-mini"><h4>Key callouts</h4><ul id="aiCallouts"><li>Generated from the current dashboard snapshot.</li></ul></div>
+      <div class="ai-mini"><h4>Watchlist</h4><ul id="aiWatchlist"><li>Missing data remains explicitly marked TBU.</li></ul></div>
+      <div class="ai-mini"><h4>Engine</h4><div id="aiEngine" style="font-size:12px;color:#e8ddd3;line-height:1.55">Model-ready with a deterministic fallback.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="decisionScienceSection">
+  <div class="section-head"><div><h2>Decision Science</h2><p>Portfolio efficiency frontier, Pareto concentration and demographic CPA index. These views update automatically as Meta and Google data are added.</p></div></div>
+  <div class="science-grid">
+    <div class="card"><h3>Portfolio efficiency frontier</h3><div id="efficiencyFrontier" class="chart"></div><div id="frontierCallout" class="science-callout"></div></div>
+    <div class="card"><h3>Pareto efficiency curve</h3><div id="paretoCurve" class="chart"></div><div id="paretoCallout" class="science-callout"></div></div>
+  </div>
+  <div class="card" style="margin-top:20px"><h3>Demographic CPA index</h3><div id="demographicHeatmap"></div><div id="demoCallout" class="science-callout"></div></div>
 </section>
 
 <section class="section"><div class="section-head"><div><h2>Account-level WoW</h2><p>Latest 13 completed calendar weeks against the $15 CPA guardrail.</p></div></div><div id="accountWoW"></div></section>
@@ -218,6 +243,125 @@ function renderSearch(){
  const share='<div class="card table-wrap" style="margin-top:18px"><h3>Search visibility by campaign</h3><table><thead><tr><th>Campaign</th><th class="r">Search IS</th><th class="r">Lost IS budget</th><th class="r">Lost IS rank</th><th class="r">Top impr. rate</th><th class="r">Abs. top rate</th></tr></thead><tbody>'+groups.map(x=>'<tr><td>'+esc(x.name)+'</td><td class="r">'+pct(x.imprShare)+'</td><td class="r">'+pct(x.lostBudget)+'</td><td class="r">'+pct(x.lostRank)+'</td><td class="r">'+pct(x.topRate)+'</td><td class="r">'+pct(x.absTopRate)+'</td></tr>').join('')+'</tbody></table></div>';
  document.getElementById('searchSection').innerHTML='<div class="cut-grid"><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Search terms</h3>'+cutTable(terms.slice(0,30),'Search term',false)+'</div><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Keywords</h3>'+cutTable(keywords.slice(0,30),'Keyword',false)+'</div></div><div style="margin-top:18px"><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Match type</h3>'+cutTable(matches,'Match type',false)+'</div>'+share
 }
+
+let LAST_AI_SUMMARY=null;
+
+function portfolioCampaigns(){
+  const out=[];
+  for(const channel of ['Meta','Google']){
+    const s=dataFor(channel);
+    if(!s||!s.campaigns)continue;
+    s.campaigns.forEach(c=>{if(c&&c.spend>0&&c.purchases>0&&c.cpa!=null&&c.roas!=null)out.push({...c,channel})});
+  }
+  return out;
+}
+function median(arr){
+  const a=arr.filter(v=>Number.isFinite(Number(v))).map(Number).sort((x,y)=>x-y);
+  if(!a.length)return 0;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2
+}
+function efficiencyFrontier(){
+  const node=document.getElementById('efficiencyFrontier'),pts=portfolioCampaigns();
+  if(!pts.length){node.innerHTML='<div class="empty"><strong>TBU</strong><div>Campaign economics will appear here.</div></div>';document.getElementById('frontierCallout').textContent='No comparable campaign cells are available yet.';return}
+  const W=760,H=300,p=46,maxX=Math.max(TARGET*2.2,...pts.map(x=>Math.min(x.cpa,80)))*1.08,maxY=Math.max(3,...pts.map(x=>x.roas))*1.12,medR=median(pts.map(x=>x.roas));
+  const x=v=>p+(W-2*p)*Math.min(v,maxX)/maxX,y=v=>H-p-(H-2*p)*Math.min(v,maxY)/maxY;
+  const maxSpend=Math.max(...pts.map(z=>z.spend));let svg='<svg viewBox="0 0 '+W+' '+H+'">';
+  svg+='<line class="target" x1="'+x(TARGET)+'" x2="'+x(TARGET)+'" y1="'+p+'" y2="'+(H-p)+'"/>';
+  svg+='<line x1="'+p+'" x2="'+(W-p)+'" y1="'+y(medR)+'" y2="'+y(medR)+'" stroke="#aebdc5" stroke-dasharray="4 6"/>';
+  svg+='<text x="'+(x(TARGET)+4)+'" y="'+(p+10)+'" font-size="9" fill="#a13b20">$15 CPA</text>';
+  svg+='<text x="'+(W-p-2)+'" y="'+(y(medR)-5)+'" text-anchor="end" font-size="9" fill="#74665a">Portfolio median ROAS '+medR.toFixed(2)+'x</text>';
+  pts.forEach((z,i)=>{const r=5+16*Math.sqrt(z.spend/maxSpend),fill=z.channel==='Google'?'#2f6d8c':'#db5b1d',cx=x(z.cpa),cy=y(z.roas);svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r.toFixed(1)+'" fill="'+fill+'" fill-opacity=".72" stroke="#fff" stroke-width="1.2"><title>'+esc(z.channel+' · '+z.name+' · CPA '+money(z.cpa)+' · ROAS '+mult(z.roas)+' · Spend '+money0(z.spend))+'</title></circle>';if(i<8)svg+='<text x="'+(cx+r+3)+'" y="'+(cy+3)+'" font-size="8.5" fill="#5e5146">'+esc(z.name.slice(0,28))+'</text>'});
+  svg+='<text x="'+(W/2)+'" y="'+(H-7)+'" text-anchor="middle" font-size="10" fill="#74665a">CPA → lower is better</text><text x="12" y="'+(H/2)+'" transform="rotate(-90 12 '+(H/2)+')" text-anchor="middle" font-size="10" fill="#74665a">ROAS → higher is better</text></svg>';node.innerHTML=svg;
+  const efficient=pts.filter(z=>z.cpa<=TARGET&&z.roas>=medR),largestBad=pts.filter(z=>z.cpa>TARGET).sort((a,b)=>b.spend-a.spend)[0],best=pts.slice().sort((a,b)=>a.cpa-b.cpa)[0];
+  document.getElementById('frontierCallout').innerHTML='<strong>'+efficient.length+' campaign cell'+(efficient.length===1?'':'s')+'</strong> sit inside the low-CPA / above-median-ROAS frontier. '+(best?esc(best.name)+' has the lowest CPA at <strong>'+money(best.cpa)+'</strong>. ':'')+(largestBad?'The largest spend cell outside the $15 guardrail is '+esc(largestBad.name)+' at <strong>'+money0(largestBad.spend)+'</strong> spend and <strong>'+money(largestBad.cpa)+'</strong> CPA.':'');
+}
+function paretoCurve(){
+  const node=document.getElementById('paretoCurve'),pts=portfolioCampaigns().slice().sort((a,b)=>a.cpa-b.cpa);
+  if(!pts.length){node.innerHTML='<div class="empty"><strong>TBU</strong><div>Portfolio concentration will appear here.</div></div>';document.getElementById('paretoCallout').textContent='No comparable campaign cells are available yet.';return}
+  const totalSpend=pts.reduce((a,b)=>a+b.spend,0),totalPur=pts.reduce((a,b)=>a+b.purchases,0);let cs=0,cp=0,rows=[[0,0]];
+  pts.forEach(z=>{cs+=z.spend;cp+=z.purchases;rows.push([cs/totalSpend,cp/totalPur])});
+  const W=760,H=300,p=44,x=v=>p+(W-2*p)*v,y=v=>H-p-(H-2*p)*v;let svg='<svg viewBox="0 0 '+W+' '+H+'">';
+  for(let i=0;i<=4;i++){const q=i/4;svg+='<line class="gridline" x1="'+x(q)+'" x2="'+x(q)+'" y1="'+p+'" y2="'+(H-p)+'"/><line class="gridline" x1="'+p+'" x2="'+(W-p)+'" y1="'+y(q)+'" y2="'+y(q)+'"/>'}
+  svg+='<line x1="'+x(0)+'" y1="'+y(0)+'" x2="'+x(1)+'" y2="'+y(1)+'" stroke="#aebdc5" stroke-dasharray="4 6"/>';
+  svg+='<line x1="'+p+'" x2="'+(W-p)+'" y1="'+y(.8)+'" y2="'+y(.8)+'" stroke="#a13b20" stroke-dasharray="5 6"/>';
+  svg+='<polyline fill="none" stroke="#db5b1d" stroke-width="3" points="'+rows.map(r=>x(r[0])+','+y(r[1])).join(' ')+'"/>';
+  rows.forEach(r=>svg+='<circle cx="'+x(r[0])+'" cy="'+y(r[1])+'" r="3" fill="#db5b1d"/>');
+  svg+='<text x="'+(W/2)+'" y="'+(H-7)+'" text-anchor="middle" font-size="10" fill="#74665a">Cumulative spend share</text><text x="12" y="'+(H/2)+'" transform="rotate(-90 12 '+(H/2)+')" text-anchor="middle" font-size="10" fill="#74665a">Cumulative purchase share</text></svg>';node.innerHTML=svg;
+  let spend80=1;for(const r of rows){if(r[1]>=.8){spend80=r[0];break}}
+  const top20=Math.max(1,Math.ceil(pts.length*.2)),pur20=pts.slice(0,top20).reduce((a,b)=>a+b.purchases,0)/totalPur;
+  document.getElementById('paretoCallout').innerHTML='Sorted by CPA efficiency, the portfolio requires <strong>'+Math.round(spend80*100)+'% of spend</strong> to generate 80% of purchases. The most efficient 20% of campaign cells generate <strong>'+Math.round(pur20*100)+'% of purchases</strong>. A curve above the diagonal signals that purchases are concentrated in the more efficient cells.';
+}
+function demographicHeatmap(){
+  const root=document.getElementById('demographicHeatmap'),d=demographicFor(ACTIVE)||demographicFor('Meta');
+  if(!d||!d.ageGender||!d.ageGender.length){root.innerHTML='<div class="empty"><strong>TBU</strong><div>Age × gender CPA index will appear here.</div></div>';document.getElementById('demoCallout').textContent='Demographic data is unavailable.';return}
+  const base=dataFor(ACTIVE)||dataFor('Meta'),avg=base&&base.current&&base.current.cpa||median(d.ageGender.map(x=>x.current.cpa));
+  const ages=['18-24','25-34','35-44','45-54','55-64','65+'],genders=['female','male','unknown'];
+  let html='<div class="heatmap"><div class="heat-row"><div></div>'+genders.map(g=>'<div class="heat-label" style="justify-content:center">'+g+'</div>').join('')+'</div>';
+  const cells=[];
+  ages.forEach(age=>{html+='<div class="heat-row"><div class="heat-label">'+age+'</div>';genders.forEach(g=>{const x=d.ageGender.find(z=>z.name.toLowerCase()===((age+' · '+g).toLowerCase()));if(!x||x.current.cpa==null){html+='<div class="heat-cell" style="background:#efe9e2"><div class="hc-main">—</div><div class="hc-sub">TBU</div></div>';return}const idx=x.current.cpa/avg*100,capped=Math.max(55,Math.min(160,idx)),bad=capped>100,intensity=Math.min(.32,Math.abs(capped-100)/130+.07),bg=bad?'rgba(161,59,32,'+intensity+')':'rgba(23,113,76,'+intensity+')';html+='<div class="heat-cell" style="background:'+bg+'"><div class="hc-main">'+Math.round(idx)+'</div><div class="hc-sub">'+money(x.current.cpa)+'</div></div>';cells.push({name:x.name,cpa:x.current.cpa,idx})});html+='</div>'});
+  html+='</div><div class="science-legend"><span><i class="swatch" style="background:#17714c"></i> Index below 100 = better than account CPA</span><span><i class="swatch" style="background:#a13b20"></i> Index above 100 = worse</span></div>';root.innerHTML=html;
+  const best=cells.slice().sort((a,b)=>a.cpa-b.cpa)[0],worst=cells.slice().sort((a,b)=>b.cpa-a.cpa)[0];
+  document.getElementById('demoCallout').innerHTML='Account CPA is indexed to 100. '+(best?'<strong>'+esc(best.name)+'</strong> is the strongest measured cell at index '+Math.round(best.idx)+' ('+money(best.cpa)+' CPA). ':'')+(worst?'<strong>'+esc(worst.name)+'</strong> is the weakest at index '+Math.round(worst.idx)+' ('+money(worst.cpa)+' CPA).':'');
+}
+function renderDecisionScience(){efficiencyFrontier();paretoCurve();demographicHeatmap()}
+
+function topCutPayload(type,key,limit=10){
+  const rows=reportRows(ACTIVE,type);if(!rows.length)return [];
+  return cutSummary(rows,key).slice(0,limit).map(x=>({name:x.name,current:x.current,prior:x.prior}))
+}
+function conciseArray(arr,n=10){return (arr||[]).slice(0,n).map(x=>({name:x.name,spend:x.spend,purchases:x.purchases,cpa:x.cpa,roas:x.roas,ctr:x.ctr,lpv_atc:x.lpv_atc,lpv_purchase:x.lpv_purchase}))}
+function buildAIPayload(){
+  const channels={};
+  for(const ch of ['Meta','Google']){const x=dataFor(ch);if(x)channels[ch]={current:x.current,prior:x.prior,weekly:x.weekly,monthly:x.monthly}}
+  const s=dataFor(ACTIVE),demo=demographicFor(ACTIVE);
+  let demoObj=null;
+  if(demo){
+    const measured=demo.ageGender.filter(x=>x.current&&x.current.cpa!=null&&x.current.purchases>0);
+    const best=measured.slice().sort((a,b)=>a.current.cpa-b.current.cpa)[0],worst=measured.slice().sort((a,b)=>b.current.cpa-a.current.cpa)[0];
+    demoObj={age:demo.age.slice(0,10),gender:demo.gender.slice(0,10),age_gender:demo.ageGender.slice(0,14),best:best?{name:best.name,cpa:best.current.cpa}:null,worst:worst?{name:worst.name,cpa:worst.current.cpa}:null,summary:best&&worst?'Best measured demographic CPA is '+best.name+' at '+money(best.current.cpa)+'; weakest is '+worst.name+' at '+money(worst.current.cpa)+'.':''}
+  }
+  const geo=topCutPayload('Geo','Region',10),delivery=topCutPayload('Delivery','Device',10),aud=topCutPayload('Audience','Audience_or_Keyword',10),time=topCutPayload('Time','Day_of_Week',10),search=ACTIVE==='Google'?topCutPayload('Google_Search','Search_Term',12):[];
+  const pc=portfolioCampaigns(),medR=median(pc.map(x=>x.roas)),frontier=pc.filter(x=>x.cpa<=TARGET&&x.roas>=medR);
+  const skuSummary=s&&s.skus?s.skus.slice(0,4).map(x=>x.name+' '+money(x.current.cpa)+' CPA / '+mult(x.current.roas)+' ROAS').join('; '):'';
+  const funnelSummary=s&&s.current?'LPV→ATC '+pct(s.current.lpv_atc)+', checkout→purchase '+pct(s.current.checkout_purchase)+', LPV→purchase '+pct(s.current.lpv_purchase)+'.':'';
+  return {
+    brand:'Jones Soda',target_cpa:TARGET,active_channel:ACTIVE,data_version:UPLOAD?.uploadedAt||'fallback-2026-10-04',channels,
+    skus:s&&s.skus?s.skus.slice(0,6):[],sku_summary:skuSummary,funnel_summary:funnelSummary,
+    campaigns:s?conciseArray(s.campaigns,12):[],campaign_summary:s&&s.campaigns&&s.campaigns.length?'Largest current campaign: '+s.campaigns[0].name+' at '+money(s.campaigns[0].cpa)+' CPA.':'',
+    audiences:s?conciseArray(s.adsets,12):[],audience_summary:aud.length?'Audience cut data is available.':'Dedicated audience-cut data is not yet uploaded.',
+    creatives:s?conciseArray(s.ads,12):[],creative_summary:s&&s.ads&&s.ads.length?'Creative CPA ranges from '+money(Math.min(...s.ads.filter(x=>x.cpa!=null).map(x=>x.cpa)))+' among current spend cells.':'',
+    demographics:demoObj,
+    geo:geo,geo_summary:geo.length?'Geographic cut data is available.':'Geographic data is TBU.',
+    delivery:delivery,delivery_summary:delivery.length?'Device/delivery cut data is available.':'Device/placement data is TBU.',
+    time:time,time_summary:time.length?'Daypart cut data is available.':'Daypart data is TBU.',
+    search:search,search_summary:search.length?'Google search-term data is available.':'Google search intelligence is TBU.',
+    portfolio:{campaigns:pc.slice(0,24),median_roas:medR,frontier_count:frontier.length,summary:pc.length?frontier.length+' campaign cells sit at or below $15 CPA and at or above portfolio-median ROAS.':'Portfolio frontier is TBU.'}
+  }
+}
+function resetAI(){
+  LAST_AI_SUMMARY=null;document.getElementById('aiHeadline').textContent='One-click executive analysis';document.getElementById('aiExecutiveCopy').textContent='Click Generate Executive Brief. The analysis will use the current Meta and Google data, SKU economics, funnel, campaigns, audiences, creatives and all available cuts.';document.getElementById('aiCallouts').innerHTML='<li>Generated from the current dashboard snapshot.</li>';document.getElementById('aiWatchlist').innerHTML='<li>Missing data remains explicitly marked TBU.</li>';document.getElementById('aiEngine').textContent='Model-ready with a deterministic fallback.';document.getElementById('aiProviderStatus').textContent='Ready';document.querySelectorAll('.ai-inline').forEach(x=>x.remove())
+}
+function applyAI(result){
+  LAST_AI_SUMMARY=result;const a=result.summary||result;
+  document.getElementById('aiHeadline').textContent=a.headline||'Executive performance read';
+  document.getElementById('aiExecutiveCopy').textContent=a.executive_summary||'';
+  document.getElementById('aiCallouts').innerHTML=(a.callouts||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>No additional callout.</li>';
+  document.getElementById('aiWatchlist').innerHTML=(a.watchlist||[]).map(x=>'<li>'+esc(x)+'</li>').join('')||'<li>No additional watch item.</li>';
+  const provider=result.provider==='openai'?'OpenAI · '+(result.model||'model'):result.provider==='anthropic'?'Claude · '+(result.model||'model'):'Rules-based fallback';
+  document.getElementById('aiEngine').innerHTML='<span class="provider-pill">'+esc(provider)+'</span><div style="margin-top:8px">Generated '+new Date(result.generatedAt||Date.now()).toLocaleString()+'</div>';
+  document.getElementById('aiProviderStatus').textContent=result.provider==='local'?'Fallback active':'AI brief ready';
+  const map={accountWoW:'account_wow',accountMoM:'account_mom',skuSection:'sku',funnelSection:'funnel',demographicSection:'demographics',geoSection:'geo',deliverySection:'delivery',audienceCutSection:'audience',timeSection:'time',searchSection:'search',campaignSection:'campaigns',creativeSection:'creative',decisionScienceSection:'portfolio'};
+  Object.entries(map).forEach(([id,key])=>{const target=document.getElementById(id),section=target&&(target.classList.contains('section')?target:target.closest('.section'));if(!section)return;let box=section.querySelector('.ai-inline');if(!box){box=document.createElement('div');box.className='ai-inline';const head=section.querySelector('.section-head');head?head.insertAdjacentElement('afterend',box):section.prepend(box)}box.innerHTML='<b>Executive read:</b> '+esc((a.sections&&a.sections[key])||'No additional interpretation is available for this section.')})
+}
+async function generateAI(force=false){
+  const btn=document.getElementById('aiBriefBtn'),status=document.getElementById('aiProviderStatus');btn.disabled=true;btn.textContent='Generating…';status.textContent='Reading dashboard';
+  try{
+    const r=await fetch('/api/ai-summary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({payload:buildAIPayload(),force})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error||'Unable to generate summary');applyAI(j);btn.textContent='Regenerate Brief';
+  }catch(e){status.textContent='Summary unavailable';document.getElementById('aiHeadline').textContent='Executive brief could not be generated';document.getElementById('aiExecutiveCopy').textContent=e.message;btn.textContent='Try Again'}
+  finally{btn.disabled=false}
+}
+document.getElementById('aiBriefBtn').addEventListener('click',()=>generateAI(!!LAST_AI_SUMMARY));
+
 function render(){
  document.querySelectorAll('.channel-btn').forEach(b=>b.classList.toggle('active',b.dataset.channel===ACTIVE));
  const s=dataFor(ACTIVE),googleLive=!!dataFor('Google'),metaLive=!!dataFor('Meta');
@@ -225,9 +369,9 @@ function render(){
  document.getElementById('googleState').className='state '+(googleLive?'live':'tbu');document.getElementById('googleState').textContent=googleLive?'Live':'TBU';
  document.querySelector('[data-channel="Google"] .tiny').textContent=googleLive?'Live':'TBU';
  document.getElementById('coverage').innerHTML=s?'<strong>'+ACTIVE+':</strong> '+s.coverage+' • Latest complete date '+s.latestComplete:'<strong>Google:</strong> TBU';
- coverage();renderExecutive(s);renderWoW(s);renderMoM(s);renderSku(s);renderFunnel(s);renderDemographic();renderGeo();renderDelivery();renderAudienceCuts();renderTime();renderSearch();renderTables(s)
+ coverage();renderExecutive(s);renderDecisionScience();renderWoW(s);renderMoM(s);renderSku(s);renderFunnel(s);renderDemographic();renderGeo();renderDelivery();renderAudienceCuts();renderTime();renderSearch();renderTables(s)
 }
-document.querySelectorAll('.channel-btn').forEach(b=>b.addEventListener('click',()=>{ACTIVE=b.dataset.channel;render()}));
+document.querySelectorAll('.channel-btn').forEach(b=>b.addEventListener('click',()=>{ACTIVE=b.dataset.channel;resetAI();render()}));
 async function boot(){
  try{
   const r=await fetch('/api/data',{cache:'no-store'}),j=await r.json();
