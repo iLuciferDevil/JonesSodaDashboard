@@ -88,13 +88,13 @@ td.green { color:var(--green); font-weight:800; }
     <div>
       <div class="eyebrow">Jones Soda performance OS</div>
       <h1>Historical read, recovery logic, and expansion plan</h1>
-      <div class="sub">Static dashboard for the client meeting. Built around the question Eric asked: where has CPA been, where is it now, what worked, what broke, and what Pillar is doing next.</div>
+      <div class="sub">Historical performance, recent CPA movement, SKU-level drivers, conversion-funnel diagnosis, recovery actions, and the next acquisition test plan.</div>
       <nav class="nav">
-        <a href="#overview">Overview</a><a href="#wow">Account WoW</a><a href="#mom">Account MoM</a><a href="#sku">SKU read</a><a href="#worked">Worked / did not work</a><a href="#plan">Plan</a><a href="#tiktok">TikTok</a>
+        <a href="#overview">Overview</a><a href="#wow">Account WoW</a><a href="#mom">Account MoM</a><a href="#sku">SKU read</a><a href="#worked">Worked / did not work</a><a href="#lp">LP conversion deep dive</a><a href="#plan">Recovery plan</a><a href="#tiktok">TikTok</a>
       </nav>
     </div>
     <div class="data-note">
-      <div><strong>Meta data source:</strong> Keerthana workbook</div>
+      <div><strong>Data source:</strong> Paid media performance export</div>
       <div><strong>Latest complete week:</strong> Sep 28 to Oct 4</div>
       <div><strong>Decision guardrail:</strong> CPA should stay at or below $15</div>
     </div>
@@ -113,16 +113,16 @@ td.green { color:var(--green); font-weight:800; }
     <div class="kpi danger"><div class="label">Sep CPA</div><div class="value">$18.41</div><div class="context">+257% vs Aug</div></div>
     <div class="kpi"><div class="label">Latest week purchases</div><div class="value">676</div><div class="context">-33% WoW while spend was down</div></div>
     <div class="kpi"><div class="label">Latest week ROAS</div><div class="value">2.52x</div><div class="context">-22% WoW</div></div>
-    <div class="kpi good"><div class="label">Google current read</div><div class="value">$8.12</div><div class="context">$9.78 for Fallout campaigns, per Ben's Slack update</div></div>
+    <div class="kpi danger"><div class="label">Latest LPV → Purchase</div><div class="value">2.3%</div><div class="context">Post-click conversion is the primary diagnostic focus</div></div>
   </div>
   <div class="grid-2" style="margin-top:22px">
     <div class="card dark">
-      <h4>Story for Eric</h4>
+      <h4>Performance trajectory</h4>
       <div class="callout">The account had a strong acquisition baseline through August. September changed the economics: CPA moved above the $15 guardrail, ROAS compressed, and the latest complete week reached <strong>$27.82 CPA</strong>.</div>
     </div>
     <div class="card">
       <h4>Operating interpretation</h4>
-      <div class="callout">This is not one generic "creative got worse" story. Rocket has audience and creative fatigue plus post-click pressure. 4-Pack has a cleaner post-click problem: people still click, but fewer complete the product path.</div>
+      <div class="callout">The deterioration has multiple drivers. Rocket shows audience and creative pressure alongside post-click weakness. Orange 4-Pack retains click interest, with a larger share of the loss occurring after the landing page.</div>
     </div>
   </div>
 </section>
@@ -130,11 +130,11 @@ td.green { color:var(--green); font-weight:800; }
 <section id="wow">
   <div class="section-title">
     <h2>Account-level WoW</h2>
-    <p>The week of Sep 28 is the latest complete week and the clearest breach of the target line.</p>
+    <p>The weekly view spans the available three-month history so the recent breach can be read against the full acquisition baseline.</p>
   </div>
   <div class="grid-2">
     <div class="card chart-wrap">
-      <div class="chart-title"><span>Weekly CPA vs $15 guardrail</span><span class="legend"><span><i class="dot" style="background:var(--orange)"></i>CPA</span><span><i class="dot" style="background:#aa2e14"></i>$15 target</span></span></div>
+      <div class="chart-title"><span>CPA trending WoW, past 3 months</span><span class="legend"><span><i class="dot" style="background:var(--orange)"></i>CPA</span><span><i class="dot" style="background:#aa2e14"></i>$15 target</span></span></div>
       <div id="weeklyCpaChart"></div>
     </div>
     <div class="card chart-wrap">
@@ -219,18 +219,82 @@ td.green { color:var(--green); font-weight:800; }
   </div>
 </section>
 
+<section id="lp">
+  <div class="section-title">
+    <h2>Landing-page conversion deep dive</h2>
+    <p>Both Jones Soda and Pillar confirmed that the landing-page experience remained unchanged during the period in question. The conversion break therefore needs to be isolated through funnel, traffic-quality, device, browser, audience, and checkout diagnostics.</p>
+  </div>
+  <div class="grid-2">
+    <div class="card dark">
+      <h4>What changed between Sep 24 and Sep 27</h4>
+      <div class="callout">LPV → Purchase fell from <strong>4.17%</strong> to <strong>1.89%</strong>, a 54.8% decline in three days. Click → LPV improved slightly over the same window, which places the larger break after the landing page loaded.</div>
+    </div>
+    <div class="card">
+      <h4>Funnel decomposition</h4>
+      <table>
+        <thead><tr><th>Stage</th><th class="right">Sep 24</th><th class="right">Sep 27</th><th class="right">Change</th></tr></thead>
+        <tbody>
+          <tr><td>Click → LPV</td><td class="right">87.1%</td><td class="right">90.1%</td><td class="right green">+3.4%</td></tr>
+          <tr><td>LPV → ATC</td><td class="right">9.8%</td><td class="right">7.2%</td><td class="right red">-26.3%</td></tr>
+          <tr><td>ATC → Purchase</td><td class="right">42.5%</td><td class="right">26.1%</td><td class="right red">-38.7%</td></tr>
+          <tr><td>Checkout → Purchase</td><td class="right">55.9%</td><td class="right">44.2%</td><td class="right red">-20.9%</td></tr>
+          <tr><td><strong>LPV → Purchase</strong></td><td class="right"><strong>4.17%</strong></td><td class="right"><strong>1.89%</strong></td><td class="right red"><strong>-54.8%</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="grid-3" style="margin-top:22px">
+    <div class="card">
+      <h3>1. Traffic-mix test</h3>
+      <div class="insight-list">
+        <div class="insight"><div class="head">Question</div><div class="body">Did Meta start sending a different mix of users even though the page stayed the same?</div></div>
+        <div class="insight"><div class="head">Cut</div><div class="body">Compare Sep 21–24 vs Sep 25–28 by campaign, ad set, ad, placement, device, age, geography and new vs returning visitor.</div></div>
+        <div class="insight"><div class="head">Signal</div><div class="body">A sharp mix shift paired with lower LPV → ATC or purchase rate identifies traffic-quality pressure.</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>2. Technical-path test</h3>
+      <div class="insight-list">
+        <div class="insight"><div class="head">Question</div><div class="body">Did an unchanged page behave differently for a subset of visitors?</div></div>
+        <div class="insight"><div class="head">Cut</div><div class="body">GA4 funnel by mobile/desktop, browser, OS, page path, load performance, add-to-cart, checkout start, payment and purchase.</div></div>
+        <div class="insight"><div class="head">Signal</div><div class="body">A concentrated drop on one browser, device or checkout stage points toward a technical or operational issue rather than creative fatigue.</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>3. Demand-quality test</h3>
+      <div class="insight-list">
+        <div class="insight"><div class="head">Question</div><div class="body">Did buyer intent weaken as reach expanded or the active creative aged?</div></div>
+        <div class="insight"><div class="head">Cut</div><div class="body">Track frequency, CPM, CPC, CTR, LPV → ATC and LPV → Purchase by the same ad and audience before and after the break.</div></div>
+        <div class="insight"><div class="head">Signal</div><div class="body">Stable click delivery paired with weaker downstream conversion supports fatigue, audience saturation or message-to-page mismatch.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:22px">
+    <h3>Decision framework for the investigation</h3>
+    <table>
+      <thead><tr><th>Finding</th><th>Interpretation</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>Drop concentrated by device/browser</td><td>Technical friction</td><td>Reproduce path, fix issue, then measure funnel recovery before scaling.</td></tr>
+        <tr><td>Drop concentrated by audience/ad set</td><td>Traffic-quality deterioration</td><td>Reallocate budget toward the healthier cells and retest.</td></tr>
+        <tr><td>Drop follows frequency/creative aging</td><td>Creative fatigue or weaker message match</td><td>Launch photography-led challengers against the proven proposition.</td></tr>
+        <tr><td>Drop appears across channels and devices</td><td>Broader product, checkout or demand issue</td><td>Investigate inventory, shipping, payment, checkout and product-demand factors.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
 <section id="plan">
   <div class="section-title">
-    <h2>Recovery plan for today</h2>
-    <p>The dashboard should support the client conversation: we know what changed, where the pressure sits, and what needs to happen next.</p>
+    <h2>Recovery plan for this week and the next</h2>
+    <p>The recovery plan combines immediate media actions with a structured investigation of the post-click conversion drop.</p>
   </div>
   <div class="card">
     <div class="flow">
       <div class="step"><div class="n">Now</div><div class="t">Protect cleaner cells</div><div class="d">Keep stronger pockets live, constrain weak Rocket audiences and avoid scaling the wrong signal.</div></div>
       <div class="step"><div class="n">Now</div><div class="t">Relaunch photo-only Meta</div><div class="d">Move away from AI-looking lifestyle direction and rebuild around proven product propositions.</div></div>
-      <div class="step"><div class="n">24 hours</div><div class="t">Site and cart check</div><div class="d">Confirm product page, theme, app, shipping, promo, availability or checkout changes.</div></div>
-      <div class="step"><div class="n">72 hours</div><div class="t">Measure recovery</div><div class="d">Watch CPA, LPV→ATC, LPV→Purchase, and Shopify order movement together.</div></div>
-      <div class="step"><div class="n">7 days</div><div class="t">Scale, hold, or reset</div><div class="d">Scale only when CPA improves and post-click quality moves in the same direction.</div></div>
+      <div class="step"><div class="n">This week</div><div class="t">Isolate the conversion break</div><div class="d">Run traffic-mix, device/browser and checkout-stage cuts around the Sep 24–27 drop.</div></div>
+      <div class="step"><div class="n">This week</div><div class="t">Launch controlled recovery tests</div><div class="d">Photography-led creative challengers, audience reallocation and post-click monitoring with clean controls.</div></div>
+      <div class="step"><div class="n">Next week</div><div class="t">Scale, hold, or reset</div><div class="d">Scale only when CPA improves and post-click quality moves in the same direction.</div></div>
     </div>
   </div>
 </section>
