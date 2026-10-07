@@ -1,0 +1,7 @@
+{
+  "name": "jones-soda-dashboard",
+  "private": true,
+  "dependencies": {
+    "@vercel/blob": "^2.0.0"
+  }
+}
