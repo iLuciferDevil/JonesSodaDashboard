@@ -38,6 +38,10 @@ function normalize(r) {
     Device: text(get('Device','Impression device')),
     Creative_Format: text(get('Creative_Format','Creative Format')),
     Objective: text(get('Objective')),
+    Conversion_Action: text(get('Conversion_Action','Conversion action')),
+    Day_of_Week: text(get('Day_of_Week','Day of week')),
+    Hour_of_Day: text(get('Hour_of_Day','Hour of day')),
+    Quality_Score: num(get('Quality_Score','Quality score')),
     Spend: num(get('Spend','Amount spent (USD)','Cost')),
     Reach: num(get('Reach')),
     Impressions: num(get('Impressions')),
@@ -50,6 +54,8 @@ function normalize(r) {
     Search_Impression_Share: num(get('Search_Impression_Share','Search impr. share')),
     Search_Lost_IS_Budget: num(get('Search_Lost_IS_Budget','Search lost IS (budget)')),
     Search_Lost_IS_Rank: num(get('Search_Lost_IS_Rank','Search lost IS (rank)')),
+    Search_Top_Impression_Rate: num(get('Search_Top_Impression_Rate','Search top impr. rate')),
+    Search_Absolute_Top_Impression_Rate: num(get('Search_Absolute_Top_Impression_Rate','Search abs. top impr. rate')),
     Video_3s_Views: num(get('Video_3s_Views','3-second video plays')),
     ThruPlays: num(get('ThruPlays','ThruPlays'))
   };
