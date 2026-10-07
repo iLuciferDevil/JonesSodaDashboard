@@ -1,1 +1,1 @@
-Date,Channel,SKU,Campaign,Ad_Set,Ad,Audience,Age,Gender,Placement,Platform,Device,Spend,Impressions,Link_Clicks,Landing_Page_Views,Add_To_Cart,Checkouts,Purchases,Purchase_Value
+Date,Channel,SKU,Campaign,Campaign_Type,Ad_Group_or_Ad_Set,Ad_or_Asset,Audience_or_Keyword,Search_Term,Match_Type,Age,Gender,Placement_or_Network,Platform,Device,Spend,Impressions,Clicks,Landing_Page_Views,Add_To_Cart,Checkouts,Purchases,Purchase_Value\n
