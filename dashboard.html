@@ -59,7 +59,9 @@ main{max-width:1580px;margin:0 auto;padding:26px 40px 68px}.section{margin:0 0 4
 <section class="section"><div class="section-head"><div><h2>Demographic performance</h2><p>Age, gender and age × gender cuts. Meta is populated from the current client dataset; future uploads can refresh both channels.</p></div></div><div id="demographicSection"></div></section>
 <section class="section"><div class="section-head"><div><h2>Geographic performance</h2><p>Country, region/state, city and DMA cuts. This section activates as soon as a Geo report is included in the upload.</p></div></div><div id="geoSection"></div></section>
 <section class="section"><div class="section-head"><div><h2>Device, network & placement</h2><p>Device, publisher platform, network and placement. Delivery rows stay separate from account totals to prevent double counting.</p></div></div><div id="deliverySection"></div></section>
-<section class="section"><div class="section-head"><div><h2>Google search intelligence</h2><p>Keywords, search terms, match type and impression-share constraints. Google-only and TBU until account data is uploaded.</p></div></div><div id="searchSection"></div></section>
+<section class="section"><div class="section-head"><div><h2>Audience segments</h2><p>Normalized audience-segment performance. Useful for Google audiences and any dedicated audience export kept outside Base totals.</p></div></div><div id="audienceCutSection"></div></section>
+<section class="section"><div class="section-head"><div><h2>Day-of-week & daypart</h2><p>Day-of-week and hour-of-day efficiency. Activates when a Time report is included in the upload.</p></div></div><div id="timeSection"></div></section>
+<section class="section"><div class="section-head"><div><h2>Google search intelligence</h2><p>Keywords, search terms, match type, Quality Score and impression-share constraints. Google-only and TBU until account data is uploaded.</p></div></div><div id="searchSection"></div></section>
 <section class="section"><div class="section-head"><div><h2>Campaign performance</h2><p>Latest 7D, ranked by spend.</p></div></div><div id="campaignSection"></div></section>
 <section class="section"><div class="section-head"><div><h2>Audience / ad set performance</h2><p>Latest 7D, ranked by spend.</p></div></div><div id="audienceSection"></div></section>
 <section class="section"><div class="section-head"><div><h2>Creative performance</h2><p>Latest 7D. CPA and post-click quality sit alongside CTR so click volume does not hide weaker buyer quality.</p></div></div><div id="creativeSection"></div></section>
@@ -163,8 +165,8 @@ function renderTables(s){
 }
 
 function coverage(){
- const types=['Demographic','Geo','Delivery','Google_Search','Creative_Extra'];
- const labels={'Demographic':'Age / Gender','Geo':'Geo','Delivery':'Device / Placement','Google_Search':'Search terms','Creative_Extra':'Creative extras'};
+ const types=['Demographic','Geo','Delivery','Audience','Time','Google_Search','Creative_Extra'];
+ const labels={'Demographic':'Age / Gender','Geo':'Geo','Delivery':'Device / Placement','Audience':'Audience segments','Time':'Daypart','Google_Search':'Search terms','Creative_Extra':'Creative extras'};
  document.getElementById('breakdownCoverage').innerHTML=types.map(t=>{
    const live=(t==='Demographic'&&ACTIVE==='Meta')||reportRows(ACTIVE,t).length>0;
    const relevant=t!=='Google_Search'||ACTIVE==='Google';
@@ -195,11 +197,26 @@ function renderDelivery(){
  const device=cutSummary(rows,'Device'),platform=cutSummary(rows,'Platform'),network=cutSummary(rows,'Network'),placement=cutSummary(rows,'Placement');
  document.getElementById('deliverySection').innerHTML='<div class="cut-grid"><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Device</h3>'+cutTable(device,'Device',false)+'</div><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">'+(ACTIVE==='Meta'?'Publisher platform':'Network')+'</h3>'+cutTable((ACTIVE==='Meta'?platform:network),ACTIVE==='Meta'?'Platform':'Network',false)+'</div></div>'+(placement.length?'<div style="margin-top:18px"><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Placement</h3>'+cutTable(placement.slice(0,25),'Placement',false)+'</div>':'')
 }
+function renderAudienceCuts(){
+ const rows=reportRows(ACTIVE,'Audience');
+ if(!rows.length){document.getElementById('audienceCutSection').innerHTML=emptyHTML(ACTIVE+' audience segments: TBU');return}
+ const arr=cutSummary(rows,'Audience_or_Keyword');
+ document.getElementById('audienceCutSection').innerHTML=cutTable(arr.slice(0,35),'Audience segment',false)
+}
+function renderTime(){
+ const rows=reportRows(ACTIVE,'Time');
+ if(!rows.length){document.getElementById('timeSection').innerHTML=emptyHTML(ACTIVE+' daypart performance: TBU');return}
+ const dow=cutSummary(rows,'Day_of_Week'),hour=cutSummary(rows,'Hour_of_Day');
+ document.getElementById('timeSection').innerHTML='<div class="cut-grid"><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Day of week</h3>'+cutTable(dow,'Day',false)+'</div><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Hour of day</h3>'+cutTable(hour,'Hour',false)+'</div></div>'
+}
 function renderSearch(){
  if(ACTIVE!=='Google'){document.getElementById('searchSection').innerHTML='<div class="empty"><strong>Google-only view</strong><div>Switch to Google to view keywords, search terms, match type and impression share.</div></div>';return}
  const rows=reportRows('Google','Google_Search');if(!rows.length){document.getElementById('searchSection').innerHTML=emptyHTML('Google search intelligence: TBU');return}
  const terms=cutSummary(rows,'Search_Term'),keywords=cutSummary(rows,'Keyword'),matches=cutSummary(rows,'Match_Type');
- document.getElementById('searchSection').innerHTML='<div class="cut-grid"><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Search terms</h3>'+cutTable(terms.slice(0,30),'Search term',false)+'</div><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Keywords</h3>'+cutTable(keywords.slice(0,30),'Keyword',false)+'</div></div><div style="margin-top:18px"><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Match type</h3>'+cutTable(matches,'Match type',false)+'</div>'
+ const weighted=(arr,field)=>{const den=arr.reduce((a,r)=>a+N(r.Impressions),0);if(!den)return null;const v=arr.reduce((a,r)=>{let x=N(r[field]);if(x>1)x=x/100;return a+x*N(r.Impressions)},0);return v/den};
+ const groups=[...group(rows,r=>r.Campaign||'Unspecified')].map(([name,v])=>({name,imprShare:weighted(v,'Search_Impression_Share'),lostBudget:weighted(v,'Search_Lost_IS_Budget'),lostRank:weighted(v,'Search_Lost_IS_Rank'),topRate:weighted(v,'Search_Top_Impression_Rate'),absTopRate:weighted(v,'Search_Absolute_Top_Impression_Rate')})).sort((a,b)=>(b.imprShare||0)-(a.imprShare||0));
+ const share='<div class="card table-wrap" style="margin-top:18px"><h3>Search visibility by campaign</h3><table><thead><tr><th>Campaign</th><th class="r">Search IS</th><th class="r">Lost IS budget</th><th class="r">Lost IS rank</th><th class="r">Top impr. rate</th><th class="r">Abs. top rate</th></tr></thead><tbody>'+groups.map(x=>'<tr><td>'+esc(x.name)+'</td><td class="r">'+pct(x.imprShare)+'</td><td class="r">'+pct(x.lostBudget)+'</td><td class="r">'+pct(x.lostRank)+'</td><td class="r">'+pct(x.topRate)+'</td><td class="r">'+pct(x.absTopRate)+'</td></tr>').join('')+'</tbody></table></div>';
+ document.getElementById('searchSection').innerHTML='<div class="cut-grid"><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Search terms</h3>'+cutTable(terms.slice(0,30),'Search term',false)+'</div><div><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Keywords</h3>'+cutTable(keywords.slice(0,30),'Keyword',false)+'</div></div><div style="margin-top:18px"><h3 style="font:700 21px Georgia,serif;margin:0 0 10px">Match type</h3>'+cutTable(matches,'Match type',false)+'</div>'+share
 }
 function render(){
  document.querySelectorAll('.channel-btn').forEach(b=>b.classList.toggle('active',b.dataset.channel===ACTIVE));
@@ -208,7 +225,7 @@ function render(){
  document.getElementById('googleState').className='state '+(googleLive?'live':'tbu');document.getElementById('googleState').textContent=googleLive?'Live':'TBU';
  document.querySelector('[data-channel="Google"] .tiny').textContent=googleLive?'Live':'TBU';
  document.getElementById('coverage').innerHTML=s?'<strong>'+ACTIVE+':</strong> '+s.coverage+' • Latest complete date '+s.latestComplete:'<strong>Google:</strong> TBU';
- coverage();renderExecutive(s);renderWoW(s);renderMoM(s);renderSku(s);renderFunnel(s);renderDemographic();renderGeo();renderDelivery();renderSearch();renderTables(s)
+ coverage();renderExecutive(s);renderWoW(s);renderMoM(s);renderSku(s);renderFunnel(s);renderDemographic();renderGeo();renderDelivery();renderAudienceCuts();renderTime();renderSearch();renderTables(s)
 }
 document.querySelectorAll('.channel-btn').forEach(b=>b.addEventListener('click',()=>{ACTIVE=b.dataset.channel;render()}));
 async function boot(){
