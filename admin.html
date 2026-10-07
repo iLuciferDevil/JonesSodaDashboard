@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jones Soda Dashboard Upload</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--navy:#0f2434;--cream:#f7efe3;--paper:#fffaf2;--orange:#dc5d1f;--muted:#6b5d51;--green:#16734b;--red:#a33b1e;--line:#e5d6c5}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);font-family:Inter,system-ui,Arial;color:#231a15}header{background:var(--navy);color:#fff;padding:28px 34px}main{max-width:1100px;margin:auto;padding:28px 34px}.ey{color:#ff9a60;text-transform:uppercase;letter-spacing:.15em;font-size:11px;font-weight:800}h1{font:700 36px Georgia,serif;margin:8px 0}.sub{color:#d7c7b4}.card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:20px}.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin:0 0 6px}input{width:100%;padding:12px;border:1px solid #d8c8b7;border-radius:10px;background:#fff}button,.btn{display:inline-block;background:var(--orange);color:#fff;border:0;border-radius:999px;padding:11px 16px;font-weight:800;text-decoration:none;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.secondary{background:var(--navy)}.status{padding:12px;border-radius:12px;background:#eee7df;color:var(--muted);margin-top:14px}.ok{background:#e4f4e8;color:var(--green)}.bad{background:#ffe3d7;color:var(--red)}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:7px;border-bottom:1px solid var(--line);text-align:left}.preview{overflow:auto;max-height:360px}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{background:#efe6dc;border-radius:999px;padding:6px 9px;font-size:11px}.note{font-size:12px;color:var(--muted);line-height:1.5}@media(max-width:700px){.row{grid-template-columns:1fr}header,main{padding-left:18px;padding-right:18px}}
+</style>
+</head>
+<body>
+<header><div class="ey">Jones Soda dashboard admin</div><h1>Upload performance data</h1><div class="sub">Upload the reusable Excel or CSV template. The public dashboard updates from the uploaded dataset.</div></header>
+<main>
+<div class="card">
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"><a class="btn secondary" href="/Jones_Soda_Dashboard_Upload_Template.csv">Download CSV template</a><a class="btn secondary" href="/dashboard.html">Open dashboard</a></div>
+  <div class="row">
+    <div><label>Uploader name</label><input id="uploader" value="Keerthana"></div>
+    <div><label>Upload PIN</label><input id="pin" type="password" placeholder="Enter upload PIN"></div>
+  </div>
+  <div style="margin-top:16px"><label>Excel or CSV file</label><input id="file" type="file" accept=".xlsx,.xls,.csv"></div>
+  <div id="parseStatus" class="status">Choose a file. For Excel, use the sheet named <strong>Data</strong>.</div>
+  <div style="margin-top:14px"><button id="publish" disabled>Validate and publish</button></div>
+</div>
+
+<div class="card"><h3>Required columns</h3><div class="chips" id="required"></div><p class="note">Optional fields such as SKU, Ad_Set, Ad, Audience, Age, Gender, Placement, Platform and Device power additional breakdowns. Keep metric values as raw numbers.</p></div>
+
+<div class="card"><h3>File preview</h3><div id="summary" class="note">No file selected.</div><div class="preview"><table id="preview"></table></div></div>
+</main>
+<script>
+const REQUIRED=['Date','Channel','Campaign','Spend','Impressions','Link_Clicks','Landing_Page_Views','Add_To_Cart','Checkouts','Purchases','Purchase_Value'];
+const ALL=['Date','Channel','SKU','Campaign','Ad_Set','Ad','Audience','Age','Gender','Placement','Platform','Device','Spend','Impressions','Link_Clicks','Landing_Page_Views','Add_To_Cart','Checkouts','Purchases','Purchase_Value'];
+let ROWS=[];
+document.getElementById('required').innerHTML=REQUIRED.map(x=>'<span class="chip">'+x+'</span>').join('');
+
+function cleanNum(v){if(v===null||v===undefined||v==='')return 0;const s=String(v).replace(/[$,%]/g,'').replace(/,/g,'').trim();const n=Number(s);return Number.isFinite(n)?n:0}
+function cleanDate(v){
+  if(v===null||v===undefined||v==='')return '';
+  if(v instanceof Date&&!isNaN(v))return v.toISOString().slice(0,10);
+  if(typeof v==='number'&&window.XLSX){const d=XLSX.SSF.parse_date_code(v);if(d)return [d.y,String(d.m).padStart(2,'0'),String(d.d).padStart(2,'0')].join('-')}
+  const s=String(v).trim(); if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  const d=new Date(s);return isNaN(d)?s:d.toISOString().slice(0,10)
+}
+function normalize(obj){
+  const out={};ALL.forEach(k=>out[k]=obj[k]===undefined?'':obj[k]);
+  out.Date=cleanDate(out.Date);['Spend','Impressions','Link_Clicks','Landing_Page_Views','Add_To_Cart','Checkouts','Purchases','Purchase_Value'].forEach(k=>out[k]=cleanNum(out[k]));
+  return out;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+async function readFile(file){
+  const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array',cellDates:true});
+  const sheetName=wb.SheetNames.includes('Data')?'Data':wb.SheetNames[0];
+  const raw=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{defval:'',raw:true});
+  if(!raw.length)throw new Error('No data rows found in sheet '+sheetName);
+  const missing=REQUIRED.filter(k=>!(k in raw[0]));if(missing.length)throw new Error('Missing columns: '+missing.join(', '));
+  return raw.map(normalize).filter(r=>r.Date&&r.Campaign);
+}
+function preview(rows){
+  const dates=rows.map(r=>r.Date).sort(),chs=[...new Set(rows.map(r=>r.Channel).filter(Boolean))],skus=[...new Set(rows.map(r=>r.SKU).filter(Boolean))];
+  document.getElementById('summary').innerHTML='<strong>'+rows.length.toLocaleString()+' rows</strong> · '+esc(dates[0]||'')+' to '+esc(dates[dates.length-1]||'')+' · Channels: '+esc(chs.join(', ')||'n/a')+' · SKUs: '+esc(skus.join(', ')||'n/a');
+  const sample=rows.slice(0,8);document.getElementById('preview').innerHTML='<thead><tr>'+ALL.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+sample.map(r=>'<tr>'+ALL.map(h=>'<td>'+esc(r[h])+'</td>').join('')+'</tr>').join('')+'</tbody>';
+}
+document.getElementById('file').addEventListener('change',async e=>{
+  const box=document.getElementById('parseStatus');document.getElementById('publish').disabled=true;ROWS=[];
+  try{const file=e.target.files[0];if(!file)return;box.className='status';box.textContent='Reading '+file.name+'…';ROWS=await readFile(file);preview(ROWS);box.className='status ok';box.textContent='File validated. '+ROWS.length.toLocaleString()+' rows are ready to publish.';document.getElementById('publish').disabled=false}
+  catch(err){box.className='status bad';box.textContent=err.message}
+});
+document.getElementById('publish').addEventListener('click',async()=>{
+  const btn=document.getElementById('publish'),pin=document.getElementById('pin').value.trim(),uploader=document.getElementById('uploader').value.trim()||'Dashboard uploader',box=document.getElementById('parseStatus');
+  if(!pin){box.className='status bad';box.textContent='Enter the upload PIN.';return}
+  btn.disabled=true;btn.textContent='Publishing…';
+  try{
+    const r=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json','x-upload-pin':pin},body:JSON.stringify({uploadedBy:uploader,rows:ROWS})});
+    const j=await r.json();if(!r.ok)throw new Error(j.error||'Upload failed');
+    box.className='status ok';box.innerHTML='Published <strong>'+j.rowCount.toLocaleString()+' rows</strong>. Dashboard updated at '+new Date(j.uploadedAt).toLocaleString()+'.';
+    btn.textContent='Published';
+  }catch(err){box.className='status bad';box.textContent=err.message;btn.disabled=false;btn.textContent='Validate and publish'}
+});
+</script>
+</body></html>
