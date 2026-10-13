@@ -372,19 +372,6 @@ async function loadTrendSnapshot(){
   SNAPSHOT=JSON.parse(await new Response(stream).text());
  }catch(e){console.error('Trend snapshot unavailable',e)}
 }
-function snapshotRows(source,period,sku){
- if(!SNAPSHOT)return null;
- const rows=SNAPSHOT.filter(r=>r[0]===(source==='Shopify'?'Shopify':'Paid')&&r[1]===(period==='WoW'?'week':'month')&&(source==='Shopify'||r[2]===source)&&(sku==='All'||r[source==='Shopify'?2:3]===sku));
- const map=new Map();
- for(const r of rows){
-  const key=r[source==='Shopify'?2:2+1]; // Shopify key is index 2, paid period key index 3
-  const k=source==='Shopify'?r[2]:r[3];
-  const actual=source==='Shopify'?r[2]:r[3];
-  const periodKey=source==='Shopify'?r[2]:r[3];
-  // Both source shapes place the date immediately after the period field.
- }
- return rows;
-}
 function trendPoints(source,period,sku){
  if(!SNAPSHOT)return [];
  const m=new Map(),isShopify=source==='Shopify';
@@ -430,11 +417,12 @@ function render(){
 document.querySelectorAll('.channel-btn').forEach(b=>b.addEventListener('click',()=>{ACTIVE=b.dataset.channel;resetAI();render()}));
 async function boot(){
  await loadTrendSnapshot();
+ if(SNAPSHOT){document.getElementById('freshness').textContent='Trend snapshots through October 12, 2026 · Detailed KPIs may require latest uploader data';}
  try{
   const r=await fetch('/api/data',{cache:'no-store'}),j=await r.json();
   if(j.data&&Array.isArray(j.data.rows)&&j.data.rows.length){UPLOAD=j.data;document.getElementById('freshness').textContent='Last upload '+new Date(j.data.uploadedAt).toLocaleString()+' • '+j.data.rowCount.toLocaleString()+' rows'}
-  else document.getElementById('freshness').textContent='Meta dataset current through Oct 4, 2026 • Google TBU'
- }catch(e){document.getElementById('freshness').textContent='Meta dataset current through Oct 4, 2026 • Google TBU'}
+  else if(!SNAPSHOT) document.getElementById('freshness').textContent='Meta dataset current through Oct 4, 2026 • Google TBU'
+ }catch(e){if(!SNAPSHOT)document.getElementById('freshness').textContent='Meta dataset current through Oct 4, 2026 • Google TBU'}
  render()
 }
 window.addEventListener('load',boot);
