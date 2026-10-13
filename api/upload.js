@@ -77,9 +77,6 @@ module.exports = async function handler(req, res) {
     const rows = incoming.map(normalize).filter(r => r.Date && r.Channel);
     if (!rows.length) return res.status(400).json({ error: 'No valid rows after validation. Date and Channel are required.' });
 
-    const baseRows = rows.filter(r => String(r.Report_Type).toLowerCase() === 'base');
-    if (!baseRows.length) return res.status(400).json({ error: 'The upload must contain at least one Report_Type = Base row.' });
-
     // Merge incoming rows with the previous published history. Matching grains are updated, not added.
     // Metrics never form part of the grain identity.
     const dimensions = ['Report_Type','Date','Channel','SKU','Campaign','Campaign_Type',
