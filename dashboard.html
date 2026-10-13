@@ -22,7 +22,7 @@ th{font-size:11px;text-transform:uppercase;color:#695f56}tr:last-child td{border
 .notice{padding:13px 16px;background:#f1e5d8;border-radius:12px;margin:15px 0;color:#5d4d42}
 .empty{padding:42px;color:var(--muted);text-align:center}.scroll{overflow-x:auto}
 @media(max-width:900px){.charts{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.kpis{grid-template-columns:1fr}main{padding:18px 12px}.card{padding:14px}}
-</style><script src="/data/reporting-snapshot.js"></script></head><body>
+</style><script src="/data/reporting-snapshot.js"></script><script src="/data/layers/klaviyo_flows_summary.js"></script></head><body>
 <header><div class="ey">Jones Soda · Growth Performance</div><h1>Performance command center</h1><p>Meta, Google Ads, and Shopify. April 1–October 12, 2026. <a href="/admin.html">Weekly data uploader</a></p></header>
 <main>
 <section class="card"><h2>Performance overview</h2><div class="muted">Six complete months: April–September 2026. October is month-to-date through October 12. Shopify is the sales source of truth.</div>
@@ -36,6 +36,16 @@ th{font-size:11px;text-transform:uppercase;color:#695f56}tr:last-child td{border
 <div class="charts"><section class="card"><h3>Spend and sales value</h3><div id="spendChart"></div></section><section class="card"><h3>Conversion volume</h3><div id="volumeChart"></div></section></div>
 <section class="card"><h2 id="tableHeading">Performance by period</h2><div class="scroll"><table id="table"></table></div></section>
 <div class="muted">Attribution warning: Meta platform-attributed purchases and Google conversion actions are separate from actual Shopify sales. Never add these conversion totals together. Google CPA is cost per reported conversion until purchase-only conversion actions are verified. Source: historical exported datasets, not a live API feed.</div>
+
+<section class="card" id="demographics"><h2>Meta demographic performance</h2><p class="muted">Age and gender are separate views. Unknown values are excluded from comparisons. Attribution is Meta-reported.</p>
+<div class="controls"><label>Demographic<select id="demoDimension"><option value="age">Age</option><option value="gender">Gender</option></select></label><label>Reporting period<select id="demoPeriod"><option value="week">Week over week</option><option value="month">Month over month</option></select></label><label>Measure<select id="demoMetric"><option value="cpa">CPA</option><option value="roas">ROAS</option><option value="spend">Spend</option><option value="purchases">Purchases</option><option value="value">Attributed value</option></select></label><label>Period ending<select id="demoDate"></select></label><label>Campaign<select id="demoCampaign"><option value="all">All campaigns</option></select></label></div>
+<div id="demoStatus" class="muted"></div><div id="demoCards" class="kpis"></div><div class="scroll"><table id="demoTable"></table></div></section>
+<section class="card" id="lifecycle"><h2>Klaviyo lifecycle performance</h2><p class="muted">Manual campaigns and automated flows are separate. Attributed revenue is not additional Shopify revenue.</p>
+<div class="controls"><label>Type<select id="lifeType"><option value="campaign">Manual campaigns</option><option value="flow">Automated flows</option></select></label><label>Period<select id="lifePeriod"><option value="week">Week over week</option><option value="month">Month over month</option></select></label><label>Metric<select id="lifeMetric"><option value="value">Attributed revenue</option><option value="orders">Attributed orders</option><option value="delivered">Recipients / delivered</option><option value="clicks">Unique clicks</option></select></label></div><div class="kpis" id="lifeKpis"></div><div id="lifeChart"></div><h3 style="margin-top:20px">Highest-revenue campaigns / flows</h3><div class="scroll"><table id="lifeTable"></table></div></section>
+<section class="card" id="subscriberSection"><h2>Klaviyo email subscriber growth</h2><p class="muted">New subscribers, exclusions and net additions; June–July includes a significant Shopify integration/import event, which should not be called organic acquisition.</p>
+<div class="controls"><label>Period<select id="subscriberPeriod"><option value="week">Week over week</option><option value="month">Month over month</option></select></label><label>Metric<select id="subscriberMetric"><option value="net">Net additions</option><option value="new">New subscribers</option><option value="lost">Exclusions</option></select></label></div><div id="subscriberChart"></div><div class="scroll"><table id="subscriberTable"></table></div></section>
+<section class="card" id="shopifyFunnel"><h2>Shopify session conversion funnel</h2><p class="muted">Sessions to add-to-cart, checkout reached and checkout completed; these are session-based counts, not a fully deduplicated user journey.</p>
+<div class="controls"><label>Period<select id="funnelPeriod"><option value="week">Week over week</option><option value="month">Month over month</option></select></label><label>Period ending<select id="funnelDate"></select></label></div><div id="funnelKpis" class="kpis"></div><div class="scroll"><table id="funnelTable"></table></div><div id="funnelGraph"></div></section>
 </main>
 <script>
 let rows=[];
@@ -97,4 +107,64 @@ function render(){
 $('source').addEventListener('change',()=>{refreshSKU();render()});
 $('sku').addEventListener('change',render);$('period').addEventListener('change',render);$('metric').addEventListener('change',render);
 (async()=>{try{rows=await unpack(window.JONES_DATA_GZIP);refreshSKU();render()}catch(e){$('status').textContent='Unable to load reporting snapshot: '+e.message}})();
+
+const L={age:[],gender:[],campaign:[],subscribers:[],funnel:[],flow:[]};
+function parseCSV(t){let out=[],r=[],v='',q=false;for(let i=0;i<t.length;i++){let c=t[i];if(c==='"'){if(q&&t[i+1]==='"'){v+='"';i++}else q=!q}else if(c===','&&!q){r.push(v);v=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&t[i+1]==='\n')i++;r.push(v);v='';if(r.some(x=>x.length))out.push(r);r=[]}else v+=c}if(v||r.length){r.push(v);out.push(r)}const heads=out.shift()||[];return out.map(line=>Object.fromEntries(heads.map((h,i)=>[h.trim(),line[i]??''])));}
+const n=v=>Number(String(v??'').replace(/[$,%]/g,'').replace(/,/g,''))||0;
+const periodKey=(date,period)=>{const d=new Date(date+'T00:00:00Z');if(isNaN(d))return '';if(period==='month')return date.slice(0,7);d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return d.toISOString().slice(0,10)};
+const eventFormat=x=>{const r=String(x).match(/^(\d\d)\/(\d\d)\/(\d{4})$/);return r?r[3]+'-'+r[1]+'-'+r[2]:String(x).slice(0,10)};
+function selectOptions(id,values,keep){const e=$(id),old=keep?e.value:'';e.innerHTML=values.map(v=>'<option value="'+escLayer(v)+'">'+escLayer(v)+'</option>').join('');if(values.includes(old))e.value=old}
+function escLayer(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]))}
+function makeTable(id,columns,records){$(id).innerHTML='<thead><tr>'+columns.map(c=>'<th>'+escLayer(c[0])+'</th>').join('')+'</tr></thead><tbody>'+records.map(r=>'<tr>'+columns.map(([h,key,format])=>'<td>'+escLayer(format?format(r[key]):r[key])+'</td>').join('')+'</tr>').join('')+'</tbody>'}
+const dollars=x=>dollar(x,2),rate=x=>Number.isFinite(x)?fmt(x,2)+'%':'—',number=x=>fmt(x,0);
+function barList(id,rows,key,format){if(!rows.length){$(id).innerHTML='<div class="empty">No available data</div>';return}let max=Math.max(...rows.map(r=>Math.max(0,r[key])),1);$(id).innerHTML=rows.map(r=>'<div style="display:grid;grid-template-columns:minmax(110px,220px) 1fr 100px;gap:12px;align-items:center;margin:12px 0"><span>'+escLayer(r.name)+'</span><div style="background:#e9ddd0;border-radius:6px;height:18px"><div style="background:#d95c20;border-radius:6px;width:'+Math.max(0,r[key]/max*100)+'%;height:18px"></div></div><strong style="text-align:right">'+escLayer(format(r[key]))+'</strong></div>').join('')}
+function dimensionRows(){
+ const dim=$('demoDimension').value,period=$('demoPeriod').value,campaign=$('demoCampaign').value,metric=$('demoMetric').value;
+ const input=L[dim].filter(r=>campaign==='all'||r['Campaign name']===campaign);
+ const dates=[...new Set(input.map(r=>periodKey(r['Reporting starts'],period)).filter(Boolean))].sort();
+ selectOptions('demoDate',dates.reverse(),true);const chosen=$('demoDate').value;
+ const map=new Map();
+ for(const r of input){if(periodKey(r['Reporting starts'],period)!==chosen)continue;const segment=r[dim==='age'?'Age':'Gender'];if(!segment||/unknown/i.test(segment))continue;
+  if(!map.has(segment))map.set(segment,{name:segment,spend:0,purchases:0,value:0});
+  const v=map.get(segment);v.spend+=n(r['Amount spent (USD)']);v.purchases+=n(r.Purchases);v.value+=n(r['Purchases conversion value']);
+ }
+ const records=[...map.values()].map(x=>({...x,cpa:x.purchases?x.spend/x.purchases:null,roas:x.spend?x.value/x.spend:null})).sort((a,b)=>b.spend-a.spend);
+ $('demoStatus').textContent=chosen?'Reporting period: '+chosen+' · '+(campaign==='all'?'All campaigns':campaign):'No data';
+ $('demoCards').innerHTML=[['Spend',dollars(records.reduce((a,b)=>a+b.spend,0))],['Attributed purchases',number(records.reduce((a,b)=>a+b.purchases,0))]].map(x=>'<div class="kpi"><span>'+x[0]+'</span><b>'+x[1]+'</b></div>').join('');
+ makeTable('demoTable',[['Segment','name'],['Spend','spend',dollars],['Purchases','purchases',number],['CPA','cpa',x=>x===null?'—':dollars(x)],['Value','value',dollars],['ROAS','roas',x=>x===null?'—':fmt(x,2)+'x']],records);
+ const key=metric,formatted=records.map(x=>({...x,[key]:x[key]??0}));barList('demoCards',[],key,dollars); // KPIs replaced below with segment comparison bars
+ $('demoCards').innerHTML='<div style="grid-column:1/-1">'+(records.map(x=>'<div style="display:flex;gap:15px;justify-content:space-between;border-bottom:1px solid #ebddce;padding:9px 0"><b>'+escLayer(x.name)+'</b><span>'+escLayer(x[key]===null?'—':key==='roas'?fmt(x[key],2)+'x':key==='purchases'?number(x[key]):dollars(x[key]))+'</span></div>').join('')||'No populated segments')+'</div>';
+}
+function setupDemographic(){const campaigns=[...new Set([...L.age,...L.gender].map(r=>r['Campaign name']).filter(Boolean))].sort();selectOptions('demoCampaign',['all',...campaigns]);['demoDimension','demoPeriod','demoMetric','demoCampaign'].forEach(id=>$(id).addEventListener('change',dimensionRows));$('demoDate').addEventListener('change',dimensionRows);dimensionRows()}
+function lifeRollup(){
+ const type=$('lifeType').value,period=$('lifePeriod').value,key=$('lifeMetric').value;
+ let m=new Map(),byName=new Map();
+ if(type==='campaign')for(const r of L.campaign){const date=String(r['Message send date time']).slice(0,10),d=periodKey(date,period);if(!d||date<'2026-04-01'||date>'2026-10-12')continue;const v={value:n(r['Conversion value']),orders:n(r['Count of unique conversions']),delivered:n(r['Total recipients']),clicks:n(r['Unique clicks'])};merge(m,d,v);merge(byName,r['Campaign name']||'Other campaign',v)}
+ else for(const r of L.flow){if(r[0]===period)merge(m,r[1],{value:r[2],orders:r[3],delivered:r[4],clicks:r[5]});if(r[0]==='flow')merge(byName,r[1],{value:r[2],orders:r[3],delivered:r[4],clicks:r[5]})}
+ const data=[...m].sort((a,b)=>a[0].localeCompare(b[0])).map(([name,v])=>({...v,name}));
+ graph('lifeChart',data.map(r=>({...r,date:r.name,volume:r.orders})),key==='orders'?'volume':key);
+ const total=data.reduce((a,b)=>a+b[key],0);$('lifeKpis').innerHTML='<div class="kpi"><span>'+escLayer($('lifeMetric').selectedOptions[0].text)+'</span><b>'+(key==='value'?dollars(total):number(total))+'</b></div>';
+ const top=[...byName].map(([name,v])=>({...v,name})).sort((a,b)=>b.value-a.value).slice(0,12);
+ makeTable('lifeTable',[['Campaign / flow','name'],['Attributed revenue','value',dollars],['Orders','orders',number],['Recipients / delivered','delivered',number],['Unique clicks','clicks',number]],top);
+}
+function merge(map,k,v){if(!map.has(k))map.set(k,{value:0,orders:0,delivered:0,clicks:0});let x=map.get(k);for(const a of Object.keys(v))x[a]=(x[a]||0)+Number(v[a]||0)}
+function subscribersView(){const period=$('subscriberPeriod').value,metric=$('subscriberMetric').value,m=new Map(),daily=new Map();for(const r of L.subscribers){let date=String(r['Start Date']).slice(0,10);daily.set(date,r)}
+ for(const [date,r] of daily){const k=periodKey(date,period);if(!m.has(k))m.set(k,{date:k,new:0,lost:0,net:0});const o=m.get(k);o.new+=n(r['New email subscribers']);o.lost+=Math.abs(n(r['Email exclusions']));o.net=o.new-o.lost}
+ const data=[...m.values()].sort((a,b)=>a.date.localeCompare(b.date));graph('subscriberChart',data.map(r=>({...r,volume:r[metric]})),'volume');
+ makeTable('subscriberTable',[['Period','date'],['New subscribers','new',number],['Exclusions','lost',number],['Net additions','net',number]],data.slice().reverse())}
+function funnelView(){const period=$('funnelPeriod').value,grouped=new Map();for(const r of L.funnel){const date=String(r.Day).slice(0,10);if(date<'2026-04-01'||date>'2026-10-12')continue;const k=periodKey(date,period);if(!grouped.has(k))grouped.set(k,{sessions:0,cart:0,checkout:0,completed:0});let v=grouped.get(k);v.sessions+=n(r.Sessions);v.cart+=n(r['Sessions with cart additions']);v.checkout+=n(r['Sessions that reached checkout']);v.completed+=n(r['Sessions that completed checkout'])}
+ const dates=[...grouped.keys()].sort().reverse();selectOptions('funnelDate',dates,true);const selected=grouped.get($('funnelDate').value);if(!selected)return;
+ const rate=(x,y)=>y?rateText(x/y*100):'—';const rateText=x=>fmt(x,2)+'%';
+ $('funnelKpis').innerHTML=[['Sessions',number(selected.sessions)],['Cart sessions',number(selected.cart)],['Checkout sessions',number(selected.checkout)],['Purchases sessions',number(selected.completed)],['Session conversion',rate(selected.completed,selected.sessions)]].map(([n,v])=>'<div class="kpi"><span>'+n+'</span><b>'+v+'</b></div>').join('');
+ const data=dates.map(date=>{const x=grouped.get(date);return{date,...x,cvr:x.sessions?x.completed/x.sessions*100:0,cartRate:x.sessions?x.cart/x.sessions*100:0,checkoutRate:x.cart?x.checkout/x.cart*100:0,completeRate:x.checkout?x.completed/x.checkout*100:0}});
+ makeTable('funnelTable',[['Period','date'],['Sessions','sessions',number],['Cart','cart',number],['Checkout','checkout',number],['Complete','completed',number],['Conversion rate','cvr',rateText],['Cart rate','cartRate',rateText],['Cart→checkout','checkoutRate',rateText],['Checkout→purchase','completeRate',rateText]],data);
+ graph('funnelGraph',data.slice().reverse().map(x=>({...x,volume:x.cvr})),'volume')}
+async function loadLayers(){const inputs=[['age','/data/layers/meta_age.csv'],['gender','/data/layers/meta_gender.csv'],['campaign','/data/layers/klaviyo_campaigns.csv'],['funnel','/data/layers/shopify_funnel_daily.csv']];try{
+ const data=await Promise.all(inputs.map(async ([key,url])=>{const r=await fetch(url);if(!r.ok)throw Error(url+': HTTP '+r.status);return[key,parseCSV(await r.text())]}));for(const [k,v] of data)L[k]=v;
+ const lists=await Promise.all(['apr_jun','jun_jul','aug_oct'].map(async range=>{const r=await fetch('/data/layers/subscribers_'+range+'.csv');if(!r.ok)throw Error('Subscriber source unavailable');return parseCSV(await r.text())}));L.subscribers=lists.flat();L.flow=window.JONES_FLOW_SUMMARY||[];
+ setupDemographic();['lifeType','lifePeriod','lifeMetric'].forEach(id=>$(id).addEventListener('change',lifeRollup));lifeRollup();
+ ['subscriberPeriod','subscriberMetric'].forEach(id=>$(id).addEventListener('change',subscribersView));subscribersView();
+ ['funnelPeriod','funnelDate'].forEach(id=>$(id).addEventListener('change',funnelView));funnelView();
+ }catch(e){$('demoStatus').textContent='Reporting layers unavailable: '+e.message;console.error(e)}}
+loadLayers();
 </script></body></html>
