@@ -77,8 +77,9 @@ main{max-width:1580px;margin:0 auto;padding:26px 40px 68px}.section{margin:0 0 4
   <div class="card" style="margin-top:20px"><h3>Demographic CPA index</h3><div id="demographicHeatmap"></div><div id="demoCallout" class="science-callout"></div></div>
 </section>
 
-<section class="section"><div class="section-head"><div><h2>Account-level WoW</h2><p>Latest 13 completed calendar weeks against the $15 CPA guardrail.</p></div></div><div id="accountWoW"></div></section>
-<section class="section"><div class="section-head"><div><h2>Account-level MoM</h2><p>Calendar-month economics, with the current month clearly marked partial.</p></div></div><div id="accountMoM"></div></section>
+<section class="section" id="performanceTrends"><div class="section-head"><div><h2>Performance trends</h2><p>Switch between weekly and monthly performance. October is month-to-date until Oct 12 data is uploaded.</p></div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><label for="trendPeriod" style="font-size:12px">Period</label><select id="trendPeriod" style="padding:10px;border:1px solid #d8c7b6;border-radius:10px"><option value="WoW">Week over week</option><option value="MoM">Month over month</option></select><label for="trendMetric" style="font-size:12px">Metric</label><select id="trendMetric" style="padding:10px;border:1px solid #d8c7b6;border-radius:10px"><option value="cpa">CPA</option><option value="spend">Spend</option><option value="roas">ROAS</option><option value="purchases">Purchases</option><option value="revenue">Purchase value</option></select></div></div><div id="trendChart" class="card"><div class="chart" id="selectedTrendGraph"></div><div id="trendContext" class="note"></div></div></section>
+<section class="section" id="weeklyDetail"><div class="section-head"><div><h2>Account-level WoW</h2><p>Weekly performance against the $15 CPA guardrail.</p></div></div><div id="accountWoW"></div></section>
+<section class="section" id="monthlyDetail"><div class="section-head"><div><h2>Account-level MoM</h2><p>Calendar-month economics, with the current month marked partial.</p></div></div><div id="accountMoM"></div></section>
 <section class="section"><div class="section-head"><div><h2>SKU-level performance</h2><p>Latest 7D versus prior 7D, plus last full month versus the month before.</p></div></div><div id="skuSection"></div></section>
 <section class="section"><div class="section-head"><div><h2>Funnel efficiency</h2><p>Post-click conversion rates for the latest 7D and the preceding 7D.</p></div></div><div id="funnelSection"></div></section>
 <section class="section"><div class="section-head"><div><h2>Demographic performance</h2><p>Age, gender and age × gender cuts. Meta is populated from the current client dataset; future uploads can refresh both channels.</p></div></div><div id="demographicSection"></div></section>
@@ -362,6 +363,21 @@ async function generateAI(force=false){
 }
 document.getElementById('aiBriefBtn').addEventListener('click',()=>generateAI(!!LAST_AI_SUMMARY));
 
+function renderSelectedTrend(s){
+ const period=document.getElementById('trendPeriod').value, metric=document.getElementById('trendMetric').value;
+ document.getElementById('weeklyDetail').style.display=period==='WoW'?'':'none';
+ document.getElementById('monthlyDetail').style.display=period==='MoM'?'':'none';
+ const items=(s?(period==='WoW'?s.weekly:s.monthly):[])||[];
+ const el=document.getElementById('selectedTrendGraph'),context=document.getElementById('trendContext');
+ if(!items.length){el.innerHTML='<div class="empty">No '+period+' data available for this channel. Upload daily data to populate the chart.</div>';context.textContent='';return}
+ const labels=items.map(x=>period==='WoW'?x.label:x.month+(x.partial?'*':''));
+ const vals=items.map(x=>Number(x[metric])||0);
+ lineChart('selectedTrendGraph',labels,vals);
+ const start=period==='MoM'?'Six full months require April–September 2026; October is partial.':'Weekly values are grouped from the daily export.';
+ context.textContent=start+' Current data range: '+s.coverage+'. Select a metric to compare spend, efficiency or volume.';
+}
+document.getElementById('trendPeriod').addEventListener('change',()=>renderSelectedTrend(dataFor(ACTIVE)));
+document.getElementById('trendMetric').addEventListener('change',()=>renderSelectedTrend(dataFor(ACTIVE)));
 function render(){
  document.querySelectorAll('.channel-btn').forEach(b=>b.classList.toggle('active',b.dataset.channel===ACTIVE));
  const s=dataFor(ACTIVE),googleLive=!!dataFor('Google'),metaLive=!!dataFor('Meta');
@@ -369,7 +385,7 @@ function render(){
  document.getElementById('googleState').className='state '+(googleLive?'live':'tbu');document.getElementById('googleState').textContent=googleLive?'Live':'TBU';
  document.querySelector('[data-channel="Google"] .tiny').textContent=googleLive?'Live':'TBU';
  document.getElementById('coverage').innerHTML=s?'<strong>'+ACTIVE+':</strong> '+s.coverage+' • Latest complete date '+s.latestComplete:'<strong>Google:</strong> TBU';
- coverage();renderExecutive(s);renderDecisionScience();renderWoW(s);renderMoM(s);renderSku(s);renderFunnel(s);renderDemographic();renderGeo();renderDelivery();renderAudienceCuts();renderTime();renderSearch();renderTables(s)
+ coverage();renderExecutive(s);renderDecisionScience();renderWoW(s);renderMoM(s);renderSelectedTrend(s);renderSku(s);renderFunnel(s);renderDemographic();renderGeo();renderDelivery();renderAudienceCuts();renderTime();renderSearch();renderTables(s)
 }
 document.querySelectorAll('.channel-btn').forEach(b=>b.addEventListener('click',()=>{ACTIVE=b.dataset.channel;resetAI();render()}));
 async function boot(){
