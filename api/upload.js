@@ -80,18 +80,45 @@ module.exports = async function handler(req, res) {
     const baseRows = rows.filter(r => String(r.Report_Type).toLowerCase() === 'base');
     if (!baseRows.length) return res.status(400).json({ error: 'The upload must contain at least one Report_Type = Base row.' });
 
+    // Merge incoming rows with the previous published history. Matching grains are updated, not added.
+    // Metrics never form part of the grain identity.
+    const dimensions = ['Report_Type','Date','Channel','SKU','Campaign','Campaign_Type',
+      'Ad_Group_or_Ad_Set','Ad_or_Asset','Audience_or_Keyword','Keyword','Search_Term',
+      'Match_Type','Age','Gender','Country','Region','City','DMA','Platform','Network',
+      'Placement','Device','Creative_Format','Objective','Conversion_Action','Day_of_Week','Hour_of_Day'];
+    const key = r => JSON.stringify(dimensions.map(k => String(r[k] ?? '').trim().toLowerCase()));
+    let previous = [];
+    try {
+      const { list } = require('@vercel/blob');
+      const { blobs } = await list({ prefix: 'jones-dashboard/latest.json', limit: 10 });
+      const latest = (blobs || []).sort((a,b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0];
+      if (latest) {
+        const response = await fetch(latest.url, { cache:'no-store' });
+        if (!response.ok) throw new Error('Unable to read existing history');
+        const saved = await response.json();
+        if (!Array.isArray(saved.rows)) throw new Error('Existing history has an invalid structure');
+        previous = saved.rows;
+      }
+    } catch (error) {
+      return res.status(503).json({ error: 'History could not be loaded. Nothing was overwritten: ' + error.message });
+    }
+    const merged = new Map(previous.map(r => [key(r),r]));
+    for (const row of rows) merged.set(key(row),row);
+    const allRows = [...merged.values()];
+    if (!allRows.some(r => String(r.Report_Type).toLowerCase() === 'base'))
+      return res.status(400).json({error:'At least one Base row is needed in the saved dataset'});
     const payload = {
       uploadedAt: new Date().toISOString(),
       uploadedBy: body.uploadedBy || 'Dashboard uploader',
       rowCount: rows.length,
-      channels: [...new Set(rows.map(r => r.Channel))],
-      reportTypes: [...new Set(rows.map(r => r.Report_Type))],
-      rows
+      channels: [...new Set(allRows.map(r => r.Channel))],
+      reportTypes: [...new Set(allRows.map(r => r.Report_Type))],
+      rows: allRows
     };
     const blob = await put('jones-dashboard/latest.json', JSON.stringify(payload), {
       access: 'public', allowOverwrite: true, addRandomSuffix: false, contentType: 'application/json'
     });
-    return res.status(200).json({ ok:true, url:blob.url, uploadedAt:payload.uploadedAt, rowCount:rows.length, channels:payload.channels, reportTypes:payload.reportTypes });
+    return res.status(200).json({ ok:true, url:blob.url, uploadedAt:payload.uploadedAt, rowCount:allRows.length, addedOrUpdated:rows.length, channels:payload.channels, reportTypes:payload.reportTypes });
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Upload failed' });
   }
