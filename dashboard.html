@@ -106,11 +106,11 @@ function render(){
 }
 $('source').addEventListener('change',()=>{refreshSKU();render()});
 $('sku').addEventListener('change',render);$('period').addEventListener('change',render);$('metric').addEventListener('change',render);
-(async()=>{try{rows=await unpack(window.JONES_DATA_GZIP);refreshSKU();render()}catch(e){$('status').textContent='Unable to load reporting snapshot: '+e.message}})();
+const snapshotReady=(async()=>{try{rows=await unpack(window.JONES_DATA_GZIP);refreshSKU();render()}catch(e){$('status').textContent='Unable to load reporting snapshot: '+e.message}})();
 
 
-// The last-ten-days detailed data is loaded independently of the historical rollups.
-fetch('/data/daily-last10.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Daily data unavailable');return r.json()}).then(d=>{const current=rows.filter(r=>r[1]!=='day');rows=[...current,...d];if($('period').value==='day'){refreshSKU();render()}}).catch(e=>console.warn('Daily reporting data:',e));
+// Wait for the historical snapshot before layering the last ten days, preventing async overwrites.
+snapshotReady.then(async()=>{try{const r=await fetch('/data/daily-last10.json',{cache:'no-store'});if(!r.ok)throw Error('Daily data unavailable');const daily=await r.json();rows=[...rows.filter(r=>r[1]!=='day'),...daily];refreshSKU();render()}catch(e){console.warn('Daily reporting data:',e)}});
 const L={age:[],gender:[],campaign:[],subscribers:[],funnel:[],flow:[]};
 function parseCSV(t){let out=[],r=[],v='',q=false;for(let i=0;i<t.length;i++){let c=t[i];if(c==='"'){if(q&&t[i+1]==='"'){v+='"';i++}else q=!q}else if(c===','&&!q){r.push(v);v=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&t[i+1]==='\n')i++;r.push(v);v='';if(r.some(x=>x.length))out.push(r);r=[]}else v+=c}if(v||r.length){r.push(v);out.push(r)}const heads=out.shift()||[];return out.map(line=>Object.fromEntries(heads.map((h,i)=>[h.trim(),line[i]??''])));}
 const n=v=>Number(String(v??'').replace(/[$,%]/g,'').replace(/,/g,''))||0;
@@ -202,6 +202,6 @@ async function refreshFromGoogleSheets(){
  finally{btn.disabled=false}
 }
 $('loadSheetBtn').addEventListener('click',()=>refreshFromGoogleSheets());
-setTimeout(()=>refreshFromGoogleSheets(),700);
+snapshotReady.then(()=>setTimeout(()=>refreshFromGoogleSheets(),700));
 
 </script></body></html>
