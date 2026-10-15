@@ -24,7 +24,7 @@ function aggregate_(src,source,sku,date,spend,conversions,value,impressions,clic
   let week=monday_(date);
   if(!week || date<'2026-04-01')return;
   const amt=[spend,conversions,value,impressions,clicks].map(x=>Number(String(x||0).replace(/[$,]/g,''))||0);
-  for(const [p,k] of [['week',week],['month',date.slice(0,7)]]) {
+  for(const [p,k] of [['day',date.slice(0,10)],['week',week],['month',date.slice(0,7)]]) {
     const key=[source,p,k,sku].join('|');
     if(!src.has(key))src.set(key,[source,p,k,sku,0,0,0,0,0]);
     const row=src.get(key);
