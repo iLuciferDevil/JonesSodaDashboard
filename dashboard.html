@@ -202,9 +202,9 @@ function funnelView(){
  makeTable('funnelTable',[['Period','date'],[meta?'Clicks':'Sessions','sessions',number],...(meta?[['Impressions','impressions',number],['LPV','lpv',x=>x?number(x):'N/A']]:[]),['ATC','cart',number],['Checkout initiated','checkout',number],['Purchases / completed checkouts','completed',number],['ATC → Checkout','atcCheckout',fmtRate],['Checkout → Purchase','checkoutPurchase',fmtRate]],items);
  const timeseries=items.slice().reverse().slice(period==='day'?-10:undefined).map(x=>({date:x.date,rate:x[metric]})).filter(x=>Number.isFinite(x.rate));
  const host=$('funnelGraph');if(!timeseries.length){host.innerHTML='<div class="empty">No reported values for this conversion stage.</div>';return}
- const W=900,H=255,L=65,R=20,T=20,B=48,max=Math.max(1,...timeseries.map(x=>x.rate))*1.1;
- const px=i=>L+i*(W-L-R)/Math.max(1,timeseries.length-1),py=v=>H-B-v/max*(H-B-T);
- const lines=[0,.25,.5,.75,1].map(q=>{const y=py(max*q);return '<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="#e5d8ca"/><text x="'+(L-9)+'" y="'+(y+4)+'" text-anchor="end" font-size="12">'+fmt(max*q,1)+'%</text>'}).join('');
+ const W=900,H=255,leftMargin=65,R=20,T=20,B=48,max=Math.max(1,...timeseries.map(x=>x.rate))*1.1;
+ const px=i=>leftMargin+i*(W-leftMargin-R)/Math.max(1,timeseries.length-1),py=v=>H-B-v/max*(H-B-T);
+ const lines=[0,.25,.5,.75,1].map(q=>{const y=py(max*q);return '<line x1="'+leftMargin+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="#e5d8ca"/><text x="'+(leftMargin-9)+'" y="'+(y+4)+'" text-anchor="end" font-size="12">'+fmt(max*q,1)+'%</text>'}).join('');
  const dots=timeseries.map((x,i)=>'<circle cx="'+px(i)+'" cy="'+py(x.rate)+'" r="4" fill="#d95c20"><title>'+x.date+': '+fmtRate(x.rate)+'</title></circle>').join('');
  const labels=timeseries.map((x,i)=>'<text x="'+px(i)+'" y="'+(H-18)+'" text-anchor="middle" font-size="11">'+x.date.slice(5)+'</text>').join('');
  host.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+escLayer(choices.find(x=>x[0]===metric)?.[1]||metric)+' conversion rate in percent">'+lines+'<polyline fill="none" stroke="#d95c20" stroke-width="3" points="'+timeseries.map((x,i)=>px(i)+','+py(x.rate)).join(' ')+'"/>'+dots+labels+'</svg>';
