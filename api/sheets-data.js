@@ -9,7 +9,7 @@ module.exports = async function handler(req,res) {
   const [expires,sig]=value.split('.');
   const expected=crypto.createHmac('sha256',viewToken).update('jones-session-v1:'+expires).digest('hex');
   const provided=Buffer.from(sig||'','hex'),actual=Buffer.from(expected,'hex');
-  if(!/^\\d{13}$/.test(expires||'') || Number(expires)<Date.now() || !/^[a-f0-9]{64}$/.test(sig||'') || provided.length!==actual.length || !crypto.timingSafeEqual(provided,actual))
+  if(!/^\d{13}$/.test(expires||'') || Number(expires)<Date.now() || !/^[a-f0-9]{64}$/.test(sig||'') || provided.length!==actual.length || !crypto.timingSafeEqual(provided,actual))
     return res.status(401).json({error:'Please sign in to the Jones Soda dashboard'});
   const url=process.env.JONES_SHEETS_WEB_APP_URL;
   const token=process.env.JONES_SHEETS_API_KEY;
