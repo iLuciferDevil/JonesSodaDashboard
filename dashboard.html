@@ -23,7 +23,7 @@ th{font-size:11px;text-transform:uppercase;color:#695f56}tr:last-child td{border
 .empty{padding:42px;color:var(--muted);text-align:center}.scroll{overflow-x:auto}
 @media(max-width:900px){.charts{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.kpis{grid-template-columns:1fr}main{padding:18px 12px}.card{padding:14px}}
 </style><script src="/data/reporting-snapshot.js"></script><script src="/data/layers/klaviyo_flows_summary.js"></script></head><body>
-<header><div class="ey">Jones Soda · Growth Performance</div><h1>Performance command center</h1><p>Meta, Google Ads, and Shopify. April 1–October 14, 2026 (source-dependent coverage). <a href="/admin.html">Weekly data uploader</a></p></header>
+<header><div class="ey">Jones Soda · Growth Performance</div><h1>Performance command center</h1><p>Meta, Google Ads, and Shopify. April 1–October 14, 2026 (source-dependent coverage). <a href="https://docs.google.com/spreadsheets/d/1GPKaZ4scDC7J2iDlZvIxvrsXdXFXbyr5e_Ci3iYBHn4/edit" target="_blank" rel="noopener">Master Google Sheet</a> · <button type="button" id="loadSheetBtn" style="padding:8px 12px;background:#d95c20;color:white;border:0;border-radius:8px;cursor:pointer">Load latest data</button> <span id="sheetStatus" style="font-size:12px;color:#d5c9bf">Snapshot mode</span></p></header>
 <main>
 <section class="card"><h2>Performance overview</h2><div class="muted">Six complete months: April–September 2026. October is month-to-date; coverage varies by source. Shopify is the sales source of truth.</div>
 <div class="controls">
@@ -145,7 +145,7 @@ function setupDemographic(){const campaigns=[...new Set([...L.age,...L.gender].m
 function lifeRollup(){
  const type=$('lifeType').value,period=$('lifePeriod').value,key=$('lifeMetric').value;
  let m=new Map(),byName=new Map();
- if(type==='campaign')for(const r of L.campaign){const date=String(r['Message send date time']).slice(0,10),d=periodKey(date,period);if(!d||date<'2026-04-01'||date>'2026-10-12')continue;const v={value:n(r['Conversion value']),orders:n(r['Count of unique conversions']),delivered:n(r['Total recipients']),clicks:n(r['Unique clicks'])};merge(m,d,v);merge(byName,r['Campaign name']||'Other campaign',v)}
+ if(type==='campaign')for(const r of L.campaign){const date=String(r['Message send date time']).slice(0,10),d=periodKey(date,period);if(!d||date<'2026-04-01'||date>'2026-10-14')continue;const v={value:n(r['Conversion value']),orders:n(r['Count of unique conversions']),delivered:n(r['Total recipients']),clicks:n(r['Unique clicks'])};merge(m,d,v);merge(byName,r['Campaign name']||'Other campaign',v)}
  else for(const r of L.flow){if(r[0]===period)merge(m,r[1],{value:r[2],orders:r[3],delivered:r[4],clicks:r[5]});if(r[0]==='flow')merge(byName,r[1],{value:r[2],orders:r[3],delivered:r[4],clicks:r[5]})}
  const data=[...m].sort((a,b)=>a[0].localeCompare(b[0])).map(([name,v])=>({...v,name}));
  graph('lifeChart',data.map(r=>({...r,date:r.name,volume:r.orders})),key==='orders'?'volume':key);
@@ -158,7 +158,7 @@ function subscribersView(){const period=$('subscriberPeriod').value,metric=$('su
  for(const [date,r] of daily){const k=periodKey(date,period);if(!m.has(k))m.set(k,{date:k,new:0,lost:0,net:0});const o=m.get(k);o.new+=n(r['New email subscribers']);o.lost+=Math.abs(n(r['Email exclusions']));o.net=o.new-o.lost}
  const data=[...m.values()].sort((a,b)=>a.date.localeCompare(b.date));graph('subscriberChart',data.map(r=>({...r,volume:r[metric]})),'volume');
  makeTable('subscriberTable',[['Period','date'],['New subscribers','new',number],['Exclusions','lost',number],['Net additions','net',number]],data.slice().reverse())}
-function funnelView(){const period=$('funnelPeriod').value,grouped=new Map();for(const r of L.funnel){const date=String(r.Day).slice(0,10);if(date<'2026-04-01'||date>'2026-10-12')continue;const k=periodKey(date,period);if(!grouped.has(k))grouped.set(k,{sessions:0,cart:0,checkout:0,completed:0});let v=grouped.get(k);v.sessions+=n(r.Sessions);v.cart+=n(r['Sessions with cart additions']);v.checkout+=n(r['Sessions that reached checkout']);v.completed+=n(r['Sessions that completed checkout'])}
+function funnelView(){const period=$('funnelPeriod').value,grouped=new Map();for(const r of L.funnel){const date=String(r.Day).slice(0,10);if(date<'2026-04-01'||date>'2026-10-14')continue;const k=periodKey(date,period);if(!grouped.has(k))grouped.set(k,{sessions:0,cart:0,checkout:0,completed:0});let v=grouped.get(k);v.sessions+=n(r.Sessions);v.cart+=n(r['Sessions with cart additions']);v.checkout+=n(r['Sessions that reached checkout']);v.completed+=n(r['Sessions that completed checkout'])}
  const dates=[...grouped.keys()].sort().reverse();selectOptions('funnelDate',dates,true);const selected=grouped.get($('funnelDate').value);if(!selected)return;
  const rate=(x,y)=>y?rateText(x/y*100):'—';const rateText=x=>fmt(x,2)+'%';
  $('funnelKpis').innerHTML=[['Sessions',number(selected.sessions)],['Cart sessions',number(selected.cart)],['Checkout sessions',number(selected.checkout)],['Purchases sessions',number(selected.completed)],['Session conversion',rate(selected.completed,selected.sessions)]].map(([n,v])=>'<div class="kpi"><span>'+n+'</span><b>'+v+'</b></div>').join('');
@@ -173,4 +173,28 @@ async function loadLayers(){const inputs=[['age','/data/layers/meta_age.csv'],['
  ['funnelPeriod','funnelDate'].forEach(id=>$(id).addEventListener('change',funnelView));funnelView();
  }catch(e){$('demoStatus').textContent='Reporting layers unavailable: '+e.message;console.error(e)}}
 loadLayers();
+
+async function refreshFromGoogleSheets(suppliedToken){
+ const token=suppliedToken||prompt('Enter the shared Jones Soda dashboard token');
+ if(!token)return;
+ const btn=$('loadSheetBtn'),status=$('sheetStatus');btn.disabled=true;status.textContent='Connecting to Google Sheets…';
+ try{
+  const r=await fetch('/api/sheets-data',{headers:{'x-dashboard-token':token},cache:'no-store'});
+  const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Unable to read Google Sheets');
+  if(!Array.isArray(j.rows)||!j.rows.length)throw Error('No reporting data returned');
+  rows=j.rows;refreshSKU();render();
+  if(j.layers){
+   ['age','gender','campaign','funnel','subscribers','flow'].forEach(k=>{if(Array.isArray(j.layers[k]))L[k]=j.layers[k]});
+   selectOptions('demoCampaign',['all',...[...new Set([...L.age,...L.gender].map(x=>x['Campaign name']).filter(Boolean))].sort()]);
+   dimensionRows();lifeRollup();subscribersView();funnelView();
+  }
+  sessionStorage.setItem('jones_view_token',token);
+  status.textContent='Google Sheets synced · '+new Date(j.updatedAt).toLocaleString();
+ }catch(e){status.textContent='Live sync unavailable: '+e.message+' · using saved snapshot'}
+ finally{btn.disabled=false}
+}
+$('loadSheetBtn').addEventListener('click',()=>refreshFromGoogleSheets());
+const savedToken=sessionStorage.getItem('jones_view_token');
+if(savedToken)setTimeout(()=>refreshFromGoogleSheets(savedToken),500);
+
 </script></body></html>
