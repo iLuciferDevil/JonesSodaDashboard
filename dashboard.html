@@ -44,8 +44,9 @@ th{font-size:11px;text-transform:uppercase;color:#695f56}tr:last-child td{border
 <div class="controls"><label>Type<select id="lifeType"><option value="campaign">Manual campaigns</option><option value="flow">Automated flows</option></select></label><label>Period<select id="lifePeriod"><option value="week">Week over week</option><option value="month">Month over month</option></select></label><label>Metric<select id="lifeMetric"><option value="value">Attributed revenue</option><option value="orders">Attributed orders</option><option value="delivered">Recipients / delivered</option><option value="clicks">Unique clicks</option></select></label></div><div class="kpis" id="lifeKpis"></div><div id="lifeChart"></div><h3 style="margin-top:20px">Highest-revenue campaigns / flows</h3><div class="scroll"><table id="lifeTable"></table></div></section>
 <section class="card" id="subscriberSection"><h2>Klaviyo email subscriber growth</h2><p class="muted">New subscribers, exclusions and net additions; June–July includes a significant Shopify integration/import event, which should not be called organic acquisition.</p>
 <div class="controls"><label>Period<select id="subscriberPeriod"><option value="week">Week over week</option><option value="month">Month over month</option></select></label><label>Metric<select id="subscriberMetric"><option value="net">Net additions</option><option value="new">New subscribers</option><option value="lost">Exclusions</option></select></label></div><div id="subscriberChart"></div><div class="scroll"><table id="subscriberTable"></table></div></section>
-<section class="card" id="shopifyFunnel"><h2>Shopify session conversion funnel</h2><p class="muted">Sessions to add-to-cart, checkout reached and checkout completed; these are session-based counts, not a fully deduplicated user journey.</p>
-<div class="controls"><label>Period<select id="funnelPeriod"><option value="week">Week over week</option><option value="month">Month over month</option></select></label><label>Period ending<select id="funnelDate"></select></label></div><div id="funnelKpis" class="kpis"></div><div class="scroll"><table id="funnelTable"></table></div><div id="funnelGraph"></div></section>
+<section class="card" id="shopifyFunnel"><h2>Conversion funnel by source</h2><p class="muted">Meta: ad-platform attributed events. All website: Shopify session-based progression across all channels. These counts use different attribution and cannot be subtracted to calculate “Other platforms”.</p>
+<div class="controls"><label>Source<select id="funnelSource"><option value="shopify">All website (Shopify)</option><option value="meta">Meta Ads (attributed events)</option></select></label><label>Period<select id="funnelPeriod"><option value="day">Day over day</option><option value="week" selected>Week over week</option><option value="month">Month over month</option></select></label><label>Period ending<select id="funnelDate"></select></label></div>
+<p id="funnelNotice" class="muted"></p><div id="funnelKpis" class="kpis"></div><h3>Stage progression and conversion rates</h3><div id="funnelStageRates"></div><h3>Channel-level conversion counts</h3><div class="scroll"><table id="funnelTable"></table></div><h3>Conversion rate trends by funnel stage</h3><p class="muted">Select the stage to plot its percentage by reporting period. The vertical axis is percentage (%), not a number of orders.</p><div class="controls"><label>Funnel step<select id="funnelRateMetric"></select></label></div><div id="funnelGraph"></div><p class="muted">For a true Meta versus Other platforms Shopify comparison, the Shopify sessions/referrer export must include source/channel with sessions, cart additions, checkouts and purchases for the same time periods. Until then, “All website” includes Meta.</p></section>
 </main>
 <script>
 let rows=[];
@@ -161,21 +162,62 @@ function subscribersView(){const period=$('subscriberPeriod').value,metric=$('su
  for(const [date,r] of daily){const k=periodKey(date,period);if(!m.has(k))m.set(k,{date:k,new:0,lost:0,net:0});const o=m.get(k);o.new+=n(r['New email subscribers']);o.lost+=Math.abs(n(r['Email exclusions']));o.net=o.new-o.lost}
  const data=[...m.values()].sort((a,b)=>a.date.localeCompare(b.date));graph('subscriberChart',data.map(r=>({...r,volume:r[metric]})),'volume');
  makeTable('subscriberTable',[['Period','date'],['New subscribers','new',number],['Exclusions','lost',number],['Net additions','net',number]],data.slice().reverse())}
-function funnelView(){const period=$('funnelPeriod').value,grouped=new Map();for(const r of L.funnel){const date=String(r.Day).slice(0,10);if(date<'2026-04-01'||date>'2026-10-14')continue;const k=periodKey(date,period);if(!grouped.has(k))grouped.set(k,{sessions:0,cart:0,checkout:0,completed:0});let v=grouped.get(k);v.sessions+=n(r.Sessions);v.cart+=n(r['Sessions with cart additions']);v.checkout+=n(r['Sessions that reached checkout']);v.completed+=n(r['Sessions that completed checkout'])}
- const dates=[...grouped.keys()].sort().reverse();selectOptions('funnelDate',dates,true);const selected=grouped.get($('funnelDate').value);if(!selected)return;
- const rate=(x,y)=>y?rateText(x/y*100):'—';const rateText=x=>fmt(x,2)+'%';
- $('funnelKpis').innerHTML=[['Sessions',number(selected.sessions)],['Cart sessions',number(selected.cart)],['Checkout sessions',number(selected.checkout)],['Purchases sessions',number(selected.completed)],['Session conversion',rate(selected.completed,selected.sessions)]].map(([n,v])=>'<div class="kpi"><span>'+n+'</span><b>'+v+'</b></div>').join('');
- const data=dates.map(date=>{const x=grouped.get(date);return{date,...x,cvr:x.sessions?x.completed/x.sessions*100:0,cartRate:x.sessions?x.cart/x.sessions*100:0,checkoutRate:x.cart?x.checkout/x.cart*100:0,completeRate:x.checkout?x.completed/x.checkout*100:0}});
- makeTable('funnelTable',[['Period','date'],['Sessions','sessions',number],['Cart','cart',number],['Checkout','checkout',number],['Complete','completed',number],['Conversion rate','cvr',rateText],['Cart rate','cartRate',rateText],['Cart→checkout','checkoutRate',rateText],['Checkout→purchase','completeRate',rateText]],data);
- graph('funnelGraph',data.slice().reverse().map(x=>({...x,volume:x.cvr})),'volume')}
+let metaFunnelRows=[];
+function funnelView(){
+ const period=$('funnelPeriod').value,source=$('funnelSource').value,grouped=new Map();
+ if(source==='meta'){
+  for(const r of metaFunnelRows){if(r.period!==period)continue;grouped.set(r.date,{date:r.date,sessions:n(r.clicks),impressions:n(r.impressions),lpv:n(r.lpv),cart:n(r.atc),checkout:n(r.checkout),completed:n(r.purchases)})}
+ }else for(const r of L.funnel){
+  const date=String(r.Day).slice(0,10);if(!date||date<'2026-04-01')continue;
+  const k=period==='day'?date:periodKey(date,period);
+  if(!grouped.has(k))grouped.set(k,{date:k,sessions:0,cart:0,checkout:0,completed:0});
+  const v=grouped.get(k);v.sessions+=n(r.Sessions);v.cart+=n(r['Sessions with cart additions']);v.checkout+=n(r['Sessions that reached checkout']);v.completed+=n(r['Sessions that completed checkout']);
+ }
+ const dates=[...grouped.keys()].sort().reverse();selectOptions('funnelDate',dates,true);
+ const selected=grouped.get($('funnelDate').value);
+ if(!selected){$('funnelKpis').innerHTML='';$('funnelStageRates').innerHTML='No data available';$('funnelGraph').innerHTML='';$('funnelTable').innerHTML='';return;}
+ const rate=(num,den)=>den>0?num/den*100:null;
+ const fmtRate=v=>v===null?'N/A':fmt(v,2)+'%';
+ const meta=source==='meta',hasLPV=meta&&metaFunnelRows.filter(r=>r.period===period&&r.date===selected.date).some(r=>Number(r.lpv)>0);
+ const stages=meta?[
+  {name:'CTR (impressions → clicks)',num:selected.sessions,den:selected.impressions,formula:'Clicks / impressions'},
+  {name:'Clicks → LPV',num:selected.lpv,den:selected.sessions,formula:'Landing-page views / clicks',missing:!hasLPV},
+  {name:'LPV → ATC',num:selected.cart,den:selected.lpv,formula:'Adds to cart / landing-page views',missing:!hasLPV},
+  {name:'ATC → Checkout initiated',num:selected.checkout,den:selected.cart,formula:'Checkouts / adds to cart'},
+  {name:'Checkout initiated → Purchases',num:selected.completed,den:selected.checkout,formula:'Purchases / checkouts'}
+ ]:[
+  {name:'Sessions → ATC',num:selected.cart,den:selected.sessions,formula:'Cart sessions / all sessions'},
+  {name:'ATC → Checkout initiated',num:selected.checkout,den:selected.cart,formula:'Checkout sessions / cart sessions'},
+  {name:'Checkout initiated → Purchases',num:selected.completed,den:selected.checkout,formula:'Completed checkout sessions / checkout sessions'},
+  {name:'Sessions → Purchases',num:selected.completed,den:selected.sessions,formula:'Completed checkout sessions / all sessions'}
+ ];
+ $('funnelNotice').textContent=meta?(!hasLPV?'Meta LPV is unreported (zero) for the selected period. LPV conversion rates are unavailable, not 0%.':'Meta ad events are attributed metrics, not Shopify sessions.'):'Shopify sessions include all acquisition channels, including Meta.';
+ $('funnelKpis').innerHTML=(meta?[['Impressions',selected.impressions],['Link clicks',selected.sessions],['LPV',hasLPV?selected.lpv:'Not reported'],['ATC',selected.cart],['Checkout initiated',selected.checkout],['Purchases',selected.completed]]:[['Sessions',selected.sessions],['ATC sessions',selected.cart],['Checkout sessions',selected.checkout],['Completed checkout sessions',selected.completed]]).map(([name,num])=>'<div class="kpi"><span>'+escLayer(name)+'</span><b>'+escLayer(typeof num==='number'?number(num):num)+'</b></div>').join('');
+ $('funnelStageRates').innerHTML=stages.map(step=>'<div style="display:grid;grid-template-columns:minmax(180px,280px) 1fr auto;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #e6d9cb"><span>'+escLayer(step.name)+'</span><div style="background:#eee2d6;height:13px;border-radius:5px"><div style="background:#d95c20;width:'+Math.min(100,Math.max(0,step.missing?0:rate(step.num,step.den)||0))+'%;height:13px;border-radius:5px"></div></div><strong>'+escLayer(step.missing?'N/A':fmtRate(rate(step.num,step.den)))+'</strong></div>').join('');
+ const items=dates.map(date=>grouped.get(date)).map(x=>({...x,ctr:meta?rate(x.sessions,x.impressions):null,clickLpv:meta&&x.lpv?rate(x.lpv,x.sessions):null,lpvAtc:meta&&x.lpv?rate(x.cart,x.lpv):null,sessionAtc:!meta?rate(x.cart,x.sessions):null,atcCheckout:rate(x.checkout,x.cart),checkoutPurchase:rate(x.completed,x.checkout),sessionPurchase:!meta?rate(x.completed,x.sessions):null}));
+ const choices=meta?[['ctr','CTR: Impressions → clicks'],['clickLpv','Clicks → LPV'],['lpvAtc','LPV → ATC'],['atcCheckout','ATC → checkout'],['checkoutPurchase','Checkout → purchases']]:[['sessionAtc','Sessions → ATC'],['atcCheckout','ATC → checkout'],['checkoutPurchase','Checkout → purchases'],['sessionPurchase','Sessions → purchases']];
+ selectOptions('funnelRateMetric',choices.map(x=>x[0]),true);
+ for(const opt of $('funnelRateMetric').options)opt.textContent=choices.find(x=>x[0]===opt.value)[1];
+ const metric=$('funnelRateMetric').value;
+ makeTable('funnelTable',[['Period','date'],[meta?'Clicks':'Sessions','sessions',number],...(meta?[['Impressions','impressions',number],['LPV','lpv',x=>x?number(x):'N/A']]:[]),['ATC','cart',number],['Checkout initiated','checkout',number],['Purchases / completed checkouts','completed',number],['ATC → Checkout','atcCheckout',fmtRate],['Checkout → Purchase','checkoutPurchase',fmtRate]],items);
+ const timeseries=items.slice().reverse().slice(period==='day'?-10:undefined).map(x=>({date:x.date,rate:x[metric]})).filter(x=>Number.isFinite(x.rate));
+ const host=$('funnelGraph');if(!timeseries.length){host.innerHTML='<div class="empty">No reported values for this conversion stage.</div>';return}
+ const W=900,H=255,L=65,R=20,T=20,B=48,max=Math.max(1,...timeseries.map(x=>x.rate))*1.1;
+ const px=i=>L+i*(W-L-R)/Math.max(1,timeseries.length-1),py=v=>H-B-v/max*(H-B-T);
+ const lines=[0,.25,.5,.75,1].map(q=>{const y=py(max*q);return '<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="#e5d8ca"/><text x="'+(L-9)+'" y="'+(y+4)+'" text-anchor="end" font-size="12">'+fmt(max*q,1)+'%</text>'}).join('');
+ const dots=timeseries.map((x,i)=>'<circle cx="'+px(i)+'" cy="'+py(x.rate)+'" r="4" fill="#d95c20"><title>'+x.date+': '+fmtRate(x.rate)+'</title></circle>').join('');
+ const labels=timeseries.map((x,i)=>'<text x="'+px(i)+'" y="'+(H-18)+'" text-anchor="middle" font-size="11">'+x.date.slice(5)+'</text>').join('');
+ host.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+escLayer(choices.find(x=>x[0]===metric)?.[1]||metric)+' conversion rate in percent">'+lines+'<polyline fill="none" stroke="#d95c20" stroke-width="3" points="'+timeseries.map((x,i)=>px(i)+','+py(x.rate)).join(' ')+'"/>'+dots+labels+'</svg>';
+}
 async function loadLayers(){const inputs=[['age','/data/layers/meta_age.csv'],['gender','/data/layers/meta_gender.csv'],['campaign','/data/layers/klaviyo_campaigns.csv'],['funnel','/data/layers/shopify_funnel_daily.csv']];try{
  const data=await Promise.all(inputs.map(async ([key,url])=>{const r=await fetch(url);if(!r.ok)throw Error(url+': HTTP '+r.status);return[key,parseCSV(await r.text())]}));for(const [k,v] of data)L[k]=v;
  const lists=await Promise.all(['apr_jun','jun_jul','aug_oct'].map(async range=>{const r=await fetch('/data/layers/subscribers_'+range+'.csv');if(!r.ok)throw Error('Subscriber source unavailable');return parseCSV(await r.text())}));L.subscribers=lists.flat();L.flow=window.JONES_FLOW_SUMMARY||[];
  setupDemographic();['lifeType','lifePeriod','lifeMetric'].forEach(id=>$(id).addEventListener('change',lifeRollup));lifeRollup();
  ['subscriberPeriod','subscriberMetric'].forEach(id=>$(id).addEventListener('change',subscribersView));subscribersView();
- ['funnelPeriod','funnelDate'].forEach(id=>$(id).addEventListener('change',funnelView));funnelView();
+ ['funnelPeriod','funnelDate','funnelSource','funnelRateMetric'].forEach(id=>$(id).addEventListener('change',funnelView));funnelView();
  }catch(e){$('demoStatus').textContent='Reporting layers unavailable: '+e.message;console.error(e)}}
 loadLayers();
+fetch('/data/meta-funnel.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Meta funnel unavailable');return r.json()}).then(a=>{metaFunnelRows=a;funnelView()}).catch(e=>console.warn(e));
 
 async function refreshFromGoogleSheets(){
  const btn=$('loadSheetBtn'),status=$('sheetStatus');btn.disabled=true;status.textContent='Connecting to Google Sheets…';
