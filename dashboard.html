@@ -29,7 +29,7 @@ th{font-size:11px;text-transform:uppercase;color:#695f56}tr:last-child td{border
 <div class="controls">
 <label>Source<select id="source"><option value="Meta">Meta Ads</option><option value="Google">Google Ads</option><option value="Shopify">Shopify sales</option></select></label>
 <label>Product<select id="sku"></select></label>
-<label>Period<select id="period"><option value="week">Week over week</option><option value="month">Month over month</option></select></label>
+<label>Period<select id="period"><option value="day">Day over day (last 10 days)</option><option value="week">Week over week</option><option value="month">Month over month</option></select></label>
 <label>Metric<select id="metric"></select></label>
 </div><div id="status" class="notice">Loading reporting data…</div><div id="kpis" class="kpis"></div></section>
 <section class="card"><h2 id="heading">Performance trend</h2><div id="chart" class="chart"></div><div id="definition" class="muted"></div></section>
@@ -67,7 +67,7 @@ function records(){
   if(source==='Shopify'){v.volume+=Number(r[4])||0;v.value+=Number(r[6]??r[5])||0}
   else{v.spend+=Number(r[5])||0;v.volume+=Number(r[6])||0;v.value+=Number(r[7])||0;v.impressions+=Number(r[8])||0;v.clicks+=Number(r[9])||0}
  }
- return [...grp.values()].filter(x=>x.spend!==0||x.volume!==0||x.value!==0).sort((a,b)=>a.date.localeCompare(b.date));
+ return [...grp.values()].filter(x=>x.spend!==0||x.volume!==0||x.value!==0).sort((a,b)=>a.date.localeCompare(b.date)).filter(x=>period!=='day'||x.date>='2026-10-05');
 }
 function value(r,key){if(key==='cpa')return r.volume&&r.spend?r.spend/r.volume:null;if(key==='roas')return r.spend?r.value/r.spend:null;if(key==='ctr')return r.impressions?r.clicks/r.impressions*100:null;return r[key]}
 function label(v,key){if(v===null||!Number.isFinite(v))return '—';if(['spend','value','cpa'].includes(key))return dollar(v,2);if(key==='roas')return fmt(v,2)+'x';if(key==='ctr')return fmt(v,2)+'%';return fmt(v)}
@@ -92,12 +92,12 @@ function refreshSKU(){
 function render(){
  const src=$('source').value,data=records(),key=$('metric').value,period=$('period').value;
  $('status').style.display=data.length?'none':'block';$('status').textContent='No measured data for this selection.';
- if(!data.length){$('kpis').innerHTML='';['chart','spendChart','volumeChart','table'].forEach(id=>$(id).innerHTML='');return}
+ if(!data.length){$('kpis').innerHTML='';$('definition').textContent='';['chart','spendChart','volumeChart','table'].forEach(id=>$(id).innerHTML='');return}
  const last=data[data.length-1],field=src==='Shopify'?'Net sales':'Attributed value';
  const items=src==='Shopify'?[['Net sales',dollar(last.value)],['Orders (where reported)',last.date>='2026-10'?'Not available':fmt(last.volume)]]:[['Spend',dollar(last.spend)],['Conversions',fmt(last.volume)],['Cost / conversion',label(value(last,'cpa'),'cpa')],[field,dollar(last.value)],['ROAS',label(value(last,'roas'),'roas')]];
  $('kpis').innerHTML=items.map(([a,b])=>'<div class="kpi"><span>'+a+'</span><b>'+b+'</b></div>').join('');
- $('heading').textContent=$('metric').selectedOptions[0].text+' | '+(period==='week'?'WoW':'MoM');
- $('tableHeading').textContent=(period==='week'?'Weekly':'Monthly')+' performance';
+ $('heading').textContent=$('metric').selectedOptions[0].text+' | '+(period==='day'?'DoD':period==='week'?'WoW':'MoM');
+ $('tableHeading').textContent=(period==='day'?'Daily':period==='week'?'Weekly':'Monthly')+' performance';
  graph('chart',data,key);graph('spendChart',data,src==='Shopify'?'value':'spend');graph('volumeChart',data,'volume');
  $('definition').textContent='Period end: '+last.date+(last.date.startsWith('2026-10')?' · October 2026 is partial':'')+'. Values calculated from the uploaded historical exports.';
  const headers=src==='Shopify'?['Period','Net sales','Orders (where reported)']:['Period','Spend','Conversions','Cost / conversion','Attributed value','ROAS','CTR'];
@@ -108,6 +108,9 @@ $('source').addEventListener('change',()=>{refreshSKU();render()});
 $('sku').addEventListener('change',render);$('period').addEventListener('change',render);$('metric').addEventListener('change',render);
 (async()=>{try{rows=await unpack(window.JONES_DATA_GZIP);refreshSKU();render()}catch(e){$('status').textContent='Unable to load reporting snapshot: '+e.message}})();
 
+
+// The last-ten-days detailed data is loaded independently of the historical rollups.
+fetch('/data/daily-last10.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Daily data unavailable');return r.json()}).then(d=>{const current=rows.filter(r=>r[1]!=='day');rows=[...current,...d];if($('period').value==='day'){refreshSKU();render()}}).catch(e=>console.warn('Daily reporting data:',e));
 const L={age:[],gender:[],campaign:[],subscribers:[],funnel:[],flow:[]};
 function parseCSV(t){let out=[],r=[],v='',q=false;for(let i=0;i<t.length;i++){let c=t[i];if(c==='"'){if(q&&t[i+1]==='"'){v+='"';i++}else q=!q}else if(c===','&&!q){r.push(v);v=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&t[i+1]==='\n')i++;r.push(v);v='';if(r.some(x=>x.length))out.push(r);r=[]}else v+=c}if(v||r.length){r.push(v);out.push(r)}const heads=out.shift()||[];return out.map(line=>Object.fromEntries(heads.map((h,i)=>[h.trim(),line[i]??''])));}
 const n=v=>Number(String(v??'').replace(/[$,%]/g,'').replace(/,/g,''))||0;
@@ -180,7 +183,15 @@ async function refreshFromGoogleSheets(){
   const r=await fetch('/api/sheets-data',{cache:'no-store',credentials:'same-origin'});
   const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Unable to read Google Sheets');
   if(!Array.isArray(j.rows)||!j.rows.length)throw Error('No reporting data returned');
-  rows=j.rows;refreshSKU();render();
+  // Apps Script returns [channel, period, date, SKU, spend, conversions, value, impressions, clicks].
+  // Convert to the historical dashboard's existing 10-field structure before rendering.
+  const normalized=j.rows.map(r=>Array.isArray(r)&&r.length===9?
+    [r[0]==='Shopify'?'Shopify':'Paid',r[1],r[2],r[0]==='Meta'?'Meta':r[0]==='Google'?'Google':'Shopify',r[3],Number(r[4])||0,Number(r[5])||0,Number(r[6])||0,Number(r[7])||0,Number(r[8])||0]:r);
+  const valid=normalized.filter(r=>Array.isArray(r)&&r.length>=10&&['Paid','Shopify'].includes(r[0]));
+  if(!valid.length)throw Error('Unrecognized live data structure');
+  const existingDaily=rows.filter(r=>r[1]==='day');
+  rows=[...valid,...existingDaily.filter(r=>!valid.some(v=>v[1]==='day'&&v[2]===r[2]&&v[3]===r[3]&&v[4]===r[4]))];
+  refreshSKU();render();
   if(j.layers){
    ['age','gender','campaign','funnel','subscribers','flow'].forEach(k=>{if(Array.isArray(j.layers[k]))L[k]=j.layers[k]});
    selectOptions('demoCampaign',['all',...[...new Set([...L.age,...L.gender].map(x=>x['Campaign name']).filter(Boolean))].sort()]);
@@ -191,6 +202,6 @@ async function refreshFromGoogleSheets(){
  finally{btn.disabled=false}
 }
 $('loadSheetBtn').addEventListener('click',()=>refreshFromGoogleSheets());
-setTimeout(()=>refreshFromGoogleSheets(),500);
+setTimeout(()=>refreshFromGoogleSheets(),700);
 
 </script></body></html>
