@@ -67,7 +67,7 @@ function records(){
   if(source==='Shopify'){v.volume+=Number(r[4])||0;v.value+=Number(r[6]??r[5])||0}
   else{v.spend+=Number(r[5])||0;v.volume+=Number(r[6])||0;v.value+=Number(r[7])||0;v.impressions+=Number(r[8])||0;v.clicks+=Number(r[9])||0}
  }
- return [...grp.values()].filter(x=>x.spend!==0||x.volume!==0||x.value!==0).sort((a,b)=>a.date.localeCompare(b.date)).filter(x=>period!=='day'||x.date>='2026-10-05');
+ return [...grp.values()].filter(x=>x.spend!==0||x.volume!==0||x.value!==0).sort((a,b)=>a.date.localeCompare(b.date)).filter((x,i,all)=>period!=='day'||x.date>=([...new Set(all.map(r=>r.date))].slice(-10)[0]||''));
 }
 function value(r,key){if(key==='cpa'){const count=r.volume??r.purchases;return count&&r.spend?r.spend/count:null;}if(key==='roas')return r.spend?r.value/r.spend:null;if(key==='ctr')return r.impressions?r.clicks/r.impressions*100:null;return r[key]}
 function label(v,key){if(v===null||!Number.isFinite(v))return '—';if(['spend','value','cpa'].includes(key))return dollar(v,2);if(key==='roas')return fmt(v,2)+'x';if(key==='ctr')return fmt(v,2)+'%';return fmt(v)}
