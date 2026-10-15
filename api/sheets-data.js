@@ -1,6 +1,9 @@
 // Server-only proxy to a private Apps Script web app. No credentials are sent to the browser.
 module.exports = async function handler(req,res) {
   if(req.method !== 'GET')return res.status(405).json({error:'Method not allowed'});
+  const viewToken=process.env.JONES_DASHBOARD_VIEW_TOKEN;
+  if(!viewToken)return res.status(503).json({error:'Viewer access token not configured'});
+  if(req.headers['x-dashboard-token']!==viewToken)return res.status(401).json({error:'Invalid viewer access token'});
   const url=process.env.JONES_SHEETS_WEB_APP_URL;
   const token=process.env.JONES_SHEETS_API_KEY;
   if(!url||!token)return res.status(503).json({error:'Sheets backend not configured'});
