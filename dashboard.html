@@ -174,12 +174,10 @@ async function loadLayers(){const inputs=[['age','/data/layers/meta_age.csv'],['
  }catch(e){$('demoStatus').textContent='Reporting layers unavailable: '+e.message;console.error(e)}}
 loadLayers();
 
-async function refreshFromGoogleSheets(suppliedToken){
- const token=suppliedToken||prompt('Enter the shared Jones Soda dashboard token');
- if(!token)return;
+async function refreshFromGoogleSheets(){
  const btn=$('loadSheetBtn'),status=$('sheetStatus');btn.disabled=true;status.textContent='Connecting to Google Sheets…';
  try{
-  const r=await fetch('/api/sheets-data',{headers:{'x-dashboard-token':token},cache:'no-store'});
+  const r=await fetch('/api/sheets-data',{cache:'no-store',credentials:'same-origin'});
   const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Unable to read Google Sheets');
   if(!Array.isArray(j.rows)||!j.rows.length)throw Error('No reporting data returned');
   rows=j.rows;refreshSKU();render();
@@ -188,13 +186,11 @@ async function refreshFromGoogleSheets(suppliedToken){
    selectOptions('demoCampaign',['all',...[...new Set([...L.age,...L.gender].map(x=>x['Campaign name']).filter(Boolean))].sort()]);
    dimensionRows();lifeRollup();subscribersView();funnelView();
   }
-  sessionStorage.setItem('jones_view_token',token);
   status.textContent='Google Sheets synced · '+new Date(j.updatedAt).toLocaleString();
  }catch(e){status.textContent='Live sync unavailable: '+e.message+' · using saved snapshot'}
  finally{btn.disabled=false}
 }
 $('loadSheetBtn').addEventListener('click',()=>refreshFromGoogleSheets());
-const savedToken=sessionStorage.getItem('jones_view_token');
-if(savedToken)setTimeout(()=>refreshFromGoogleSheets(savedToken),500);
+setTimeout(()=>refreshFromGoogleSheets(),500);
 
 </script></body></html>
