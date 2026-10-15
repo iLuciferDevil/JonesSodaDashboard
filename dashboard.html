@@ -175,7 +175,7 @@ function funnelView(){
  }
  const dates=[...grouped.keys()].sort().reverse();selectOptions('funnelDate',dates,true);
  const selected=grouped.get($('funnelDate').value);
- if(!selected){$('funnelKpis').innerHTML='';$('funnelStageRates').innerHTML='No data available';$('funnelGraph').innerHTML='';$('funnelTable').innerHTML='';return;}
+ if(!selected){$('funnelKpis').innerHTML='';$('funnelStageRates').innerHTML='<div class="notice">No funnel data for this selection. Check the reporting layer status below.</div>';$('funnelNotice').textContent='Data coverage is unavailable for the selected source and period.';$('funnelGraph').innerHTML='';$('funnelTable').innerHTML='';return;}
  const rate=(num,den)=>den>0?num/den*100:null;
  const fmtRate=v=>v===null?'N/A':fmt(v,2)+'%';
  const meta=source==='meta',hasLPV=meta&&metaFunnelRows.filter(r=>r.period===period&&r.date===selected.date).some(r=>Number(r.lpv)>0);
@@ -214,10 +214,20 @@ async function loadLayers(){const inputs=[['age','/data/layers/meta_age.csv'],['
  const lists=await Promise.all(['apr_jun','jun_jul','aug_oct'].map(async range=>{const r=await fetch('/data/layers/subscribers_'+range+'.csv');if(!r.ok)throw Error('Subscriber source unavailable');return parseCSV(await r.text())}));L.subscribers=lists.flat();L.flow=window.JONES_FLOW_SUMMARY||[];
  setupDemographic();['lifeType','lifePeriod','lifeMetric'].forEach(id=>$(id).addEventListener('change',lifeRollup));lifeRollup();
  ['subscriberPeriod','subscriberMetric'].forEach(id=>$(id).addEventListener('change',subscribersView));subscribersView();
- ['funnelPeriod','funnelDate','funnelSource','funnelRateMetric'].forEach(id=>$(id).addEventListener('change',funnelView));funnelView();
+ ['funnelPeriod','funnelDate','funnelSource','funnelRateMetric'].forEach(id=>$(id).addEventListener('change',()=>{try{funnelView()}catch(e){showFunnelError(e)}}));funnelView();
  }catch(e){$('demoStatus').textContent='Reporting layers unavailable: '+e.message;console.error(e)}}
 loadLayers();
-fetch('/data/meta-funnel.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Meta funnel unavailable');return r.json()}).then(a=>{metaFunnelRows=a;funnelView()}).catch(e=>console.warn(e));
+function showFunnelError(error){console.error('Funnel rendering failed',error);$('funnelNotice').textContent='Funnel rendering error: '+String(error.message||error);$('funnelStageRates').innerHTML='<div class="notice">Unable to render this funnel. Other dashboard sections remain available.</div>';}
+async function ensureShopifyFunnel(){
+ try{
+  const r=await fetch('/data/layers/shopify_funnel_daily.csv',{cache:'no-store'});
+  if(!r.ok)throw Error('Shopify funnel source HTTP '+r.status);
+  const result=parseCSV(await r.text());
+  if(result.length){L.funnel=result;funnelView()}else throw Error('Shopify funnel CSV contains no rows');
+ }catch(e){showFunnelError(e)}
+}
+ensureShopifyFunnel();
+fetch('/data/meta-funnel.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Meta funnel unavailable');return r.json()}).then(a=>{metaFunnelRows=a;try{funnelView()}catch(e){showFunnelError(e)}}).catch(e=>showFunnelError(e));
 
 async function refreshFromGoogleSheets(){
  const btn=$('loadSheetBtn'),status=$('sheetStatus');btn.disabled=true;status.textContent='Connecting to Google Sheets…';
