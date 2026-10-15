@@ -23,9 +23,9 @@ th{font-size:11px;text-transform:uppercase;color:#695f56}tr:last-child td{border
 .empty{padding:42px;color:var(--muted);text-align:center}.scroll{overflow-x:auto}
 @media(max-width:900px){.charts{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.kpis{grid-template-columns:1fr}main{padding:18px 12px}.card{padding:14px}}
 </style><script src="/data/reporting-snapshot.js"></script><script src="/data/layers/klaviyo_flows_summary.js"></script></head><body>
-<header><div class="ey">Jones Soda · Growth Performance</div><h1>Performance command center</h1><p>Meta, Google Ads, and Shopify. April 1–October 12, 2026. <a href="/admin.html">Weekly data uploader</a></p></header>
+<header><div class="ey">Jones Soda · Growth Performance</div><h1>Performance command center</h1><p>Meta, Google Ads, and Shopify. April 1–October 14, 2026 (source-dependent coverage). <a href="/admin.html">Weekly data uploader</a></p></header>
 <main>
-<section class="card"><h2>Performance overview</h2><div class="muted">Six complete months: April–September 2026. October is month-to-date through October 12. Shopify is the sales source of truth.</div>
+<section class="card"><h2>Performance overview</h2><div class="muted">Six complete months: April–September 2026. October is month-to-date; coverage varies by source. Shopify is the sales source of truth.</div>
 <div class="controls">
 <label>Source<select id="source"><option value="Meta">Meta Ads</option><option value="Google">Google Ads</option><option value="Shopify">Shopify sales</option></select></label>
 <label>Product<select id="sku"></select></label>
@@ -64,7 +64,7 @@ function records(){
   if(period==='month' && (date<'2026-04'||date>'2026-10'))continue;
   if(!grp.has(date))grp.set(date,{date,spend:0,volume:0,value:0,impressions:0,clicks:0});
   const v=grp.get(date);
-  if(source==='Shopify'){v.volume+=Number(r[4])||0;v.value+=Number(r[6])||0}
+  if(source==='Shopify'){v.volume+=Number(r[4])||0;v.value+=Number(r[6]??r[5])||0}
   else{v.spend+=Number(r[5])||0;v.volume+=Number(r[6])||0;v.value+=Number(r[7])||0;v.impressions+=Number(r[8])||0;v.clicks+=Number(r[9])||0}
  }
  return [...grp.values()].filter(x=>x.spend!==0||x.volume!==0||x.value!==0).sort((a,b)=>a.date.localeCompare(b.date));
@@ -94,15 +94,15 @@ function render(){
  $('status').style.display=data.length?'none':'block';$('status').textContent='No measured data for this selection.';
  if(!data.length){$('kpis').innerHTML='';['chart','spendChart','volumeChart','table'].forEach(id=>$(id).innerHTML='');return}
  const last=data[data.length-1],field=src==='Shopify'?'Net sales':'Attributed value';
- const items=src==='Shopify'?[['Net sales',dollar(last.value)],['Orders',fmt(last.volume)]]:[['Spend',dollar(last.spend)],['Conversions',fmt(last.volume)],['Cost / conversion',label(value(last,'cpa'),'cpa')],[field,dollar(last.value)],['ROAS',label(value(last,'roas'),'roas')]];
+ const items=src==='Shopify'?[['Net sales',dollar(last.value)],['Orders (where reported)',last.date>='2026-10'?'Not available':fmt(last.volume)]]:[['Spend',dollar(last.spend)],['Conversions',fmt(last.volume)],['Cost / conversion',label(value(last,'cpa'),'cpa')],[field,dollar(last.value)],['ROAS',label(value(last,'roas'),'roas')]];
  $('kpis').innerHTML=items.map(([a,b])=>'<div class="kpi"><span>'+a+'</span><b>'+b+'</b></div>').join('');
  $('heading').textContent=$('metric').selectedOptions[0].text+' | '+(period==='week'?'WoW':'MoM');
  $('tableHeading').textContent=(period==='week'?'Weekly':'Monthly')+' performance';
  graph('chart',data,key);graph('spendChart',data,src==='Shopify'?'value':'spend');graph('volumeChart',data,'volume');
  $('definition').textContent='Period end: '+last.date+(last.date.startsWith('2026-10')?' · October 2026 is partial':'')+'. Values calculated from the uploaded historical exports.';
- const headers=src==='Shopify'?['Period','Net sales','Orders']:['Period','Spend','Conversions','Cost / conversion','Attributed value','ROAS','CTR'];
+ const headers=src==='Shopify'?['Period','Net sales','Orders (where reported)']:['Period','Spend','Conversions','Cost / conversion','Attributed value','ROAS','CTR'];
  const cols=src==='Shopify'?['value','volume']:['spend','volume','cpa','value','roas','ctr'];
- $('table').innerHTML='<thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+data.slice().reverse().map(r=>'<tr><td>'+r.date+(period==='month'&&r.date==='2026-10'?' (MTD)':'')+'</td>'+cols.map(c=>'<td>'+label(value(r,c),c)+'</td>').join('')+'</tr>').join('')+'</tbody>';
+ $('table').innerHTML='<thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+data.slice().reverse().map(r=>'<tr><td>'+r.date+(period==='month'&&r.date==='2026-10'?' (MTD)':'')+'</td>'+cols.map(c=>'<td>'+(src==='Shopify'&&c==='volume'&&r.date>='2026-10'?'—':label(value(r,c),c))+'</td>').join('')+'</tr>').join('')+'</tbody>';
 }
 $('source').addEventListener('change',()=>{refreshSKU();render()});
 $('sku').addEventListener('change',render);$('period').addEventListener('change',render);$('metric').addEventListener('change',render);
