@@ -87,7 +87,7 @@ function refreshSKU(){
  const options=[...new Set(rows.filter(r=>r[0]===(source==='Shopify'?'Shopify':'Paid')&&(source==='Shopify'||r[3]===source)).map(r=>source==='Shopify'?r[3]:r[4]))].filter(Boolean).sort();
  $('sku').innerHTML=['All products',...options].map(x=>'<option>'+x.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</option>').join('');
  $('sku').value=options.includes(old)?old:'All products';
- $('metric').innerHTML=(source==='Shopify'?[['value','Net sales'],['volume','Orders']]:[['cpa',source==='Google'?'Cost / conversion':'CPA'],['spend','Spend'],['roas','Attributed ROAS'],['volume',source==='Google'?'Conversions':'Purchases'],['value','Attributed conversion value'],['ctr','CTR']]).map(([key,name])=>'<option value="'+key+'">'+name+'</option>').join('');
+ $('metric').innerHTML=(source==='Shopify'?[['value','Net sales'],['volume','Net units']]:[['cpa',source==='Google'?'Cost / conversion':'CPA'],['spend','Spend'],['roas','Attributed ROAS'],['volume',source==='Google'?'Conversions':'Purchases'],['value','Attributed conversion value'],['ctr','CTR']]).map(([key,name])=>'<option value="'+key+'">'+name+'</option>').join('');
 }
 function render(){
  const src=$('source').value,data=records(),key=$('metric').value,period=$('period').value;
