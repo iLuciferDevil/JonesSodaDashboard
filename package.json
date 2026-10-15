@@ -2,6 +2,7 @@
   "name": "jones-soda-dashboard",
   "private": true,
   "dependencies": {
-    "@vercel/blob": "^2.0.0"
+    "@vercel/blob": "^2.0.0",
+    "@vercel/functions": "^3.0.0"
   }
 }
