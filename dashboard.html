@@ -69,10 +69,10 @@ function records(){
  }
  return [...grp.values()].filter(x=>x.spend!==0||x.volume!==0||x.value!==0).sort((a,b)=>a.date.localeCompare(b.date)).filter(x=>period!=='day'||x.date>='2026-10-05');
 }
-function value(r,key){if(key==='cpa')return r.volume&&r.spend?r.spend/r.volume:null;if(key==='roas')return r.spend?r.value/r.spend:null;if(key==='ctr')return r.impressions?r.clicks/r.impressions*100:null;return r[key]}
+function value(r,key){if(key==='cpa'){const count=r.volume??r.purchases;return count&&r.spend?r.spend/count:null;}if(key==='roas')return r.spend?r.value/r.spend:null;if(key==='ctr')return r.impressions?r.clicks/r.impressions*100:null;return r[key]}
 function label(v,key){if(v===null||!Number.isFinite(v))return '—';if(['spend','value','cpa'].includes(key))return dollar(v,2);if(key==='roas')return fmt(v,2)+'x';if(key==='ctr')return fmt(v,2)+'%';return fmt(v)}
 function graph(id,data,key){const host=$(id),valid=data.map(r=>({...r,y:value(r,key)})).filter(r=>r.y!==null&&Number.isFinite(r.y));
- if(!valid.length){host.innerHTML='<div class="empty">No valid data available for this metric and selection.</div>';return}
+ if(!valid.length){host.innerHTML='<div class="empty">No measured points for this metric and selection.</div>';return}
  const W=960,H=280,L=72,R=24,T=24,B=52,max=Math.max(...valid.map(x=>x.y),key==='cpa'?15:0,1),min=0;
  const xp=i=>L+i*(W-L-R)/Math.max(valid.length-1,1),yp=n=>H-B-(n-min)/(max-min)*(H-B-T);
  const grid=[0,.25,.5,.75,1].map(f=>{let y=T+f*(H-B-T);return '<line x1="'+L+'" y1="'+y+'" x2="'+(W-R)+'" y2="'+y+'" stroke="#e5d8ca"/><text x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end" font-size="11" fill="#75665b">'+fmt(max*(1-f),key==='roas'?1:0)+'</text>'}).join('');
