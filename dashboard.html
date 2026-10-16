@@ -230,7 +230,7 @@ async function ensureShopifyFunnel(){
  }catch(e){showFunnelError(e)}
 }
 ensureShopifyFunnel();
-fetch('/data/shopify-referrer-week-month.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Referrer funnel unavailable');return r.json()}).then(a=>{referrerFunnelRows=a.map(x=>({period:x[0]==='w'?'week':'month',date:x[1],channel:x[2],sessions:x[3],cart:x[4],checkout:x[5],completed:x[6]}));funnelView()}).catch(e=>console.warn('Referrer funnel',e));
+fetch('/data/shopify-referrer-week-month.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Fallback referrer funnel unavailable');return r.json()}).then(a=>{if(!referrerFunnelRows.length){referrerFunnelRows=a.map(x=>({period:x[0]==='w'?'week':'month',date:x[1],channel:x[2],sessions:x[3],cart:x[4],checkout:x[5],completed:x[6]}));funnelView()}}).catch(e=>console.warn('Fallback referrer funnel',e));
 fetch('/data/meta-funnel.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Meta funnel unavailable');return r.json()}).then(a=>{metaFunnelRows=a;try{funnelView()}catch(e){showFunnelError(e)}}).catch(e=>showFunnelError(e));
 
 async function refreshFromGoogleSheets(){
@@ -250,6 +250,9 @@ async function refreshFromGoogleSheets(){
   refreshSKU();render();
   if(j.layers){
    ['age','gender','campaign','funnel','subscribers','flow'].forEach(k=>{if(Array.isArray(j.layers[k]))L[k]=j.layers[k]});
+   if(Array.isArray(j.layers.referrers) && j.layers.referrers.length){
+     referrerFunnelRows=j.layers.referrers.map(r=>({period:r.period,date:r.date,channel:r.channel==='Facebook/Instagram'?'M':'O',sessions:Number(r.sessions)||0,cart:Number(r.cart)||0,checkout:Number(r.checkout)||0,completed:Number(r.completed)||0}));
+   }
    selectOptions('demoCampaign',['all',...[...new Set([...L.age,...L.gender].map(x=>x['Campaign name']).filter(Boolean))].sort()]);
    dimensionRows();lifeRollup();subscribersView();funnelView();
   }
