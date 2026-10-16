@@ -5,7 +5,7 @@
  * Deploy as Web app: Execute as Me; access Anyone; private sheets stay private.
  * Do not share web app URL or token publicly.
  */
-const DATA_TABS = ['Meta_Ads','Google_Ads','Shopify_Sales','Shopify_Funnel','Meta_Age','Meta_Gender','Klaviyo_Campaigns','Klaviyo_Flows','Klaviyo_Subscribers'];
+const DATA_TABS = ['Shopify_Referrers','Meta_Ads','Google_Ads','Shopify_Sales','Shopify_Funnel','Meta_Age','Meta_Gender','Klaviyo_Campaigns','Klaviyo_Flows','Klaviyo_Subscribers'];
 function getRows_(name) {
   const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
   if (!sh) return [];
@@ -58,7 +58,27 @@ function doGet(e) {
         for(const [i,col] of [[2,'Revenue'],[3,'Orders'],[4,'Delivered'],[5,'Clicks']])dst[i]+=Number(r[col])||0;
       }
     }
-    return out_({ok:true,updatedAt:new Date().toISOString(),rows:[...grouped.values()],layers:{age:ages,gender,campaign:campaigns,funnel,subscribers,flow:[...roll.values()]}});
+    // Shopify referrer cohort counts. Historical records are preaggregated by week/month.
+    // New daily rows are rolled up and added to their corresponding reporting periods.
+    const refMap=new Map();
+    function addRef(period,date,channel,nums){
+      if(!date||!channel)return;
+      const key=[period,date,channel].join('|');
+      if(!refMap.has(key))refMap.set(key,{period:period,date:date,channel:channel,sessions:0,cart:0,checkout:0,completed:0});
+      const x=refMap.get(key);
+      ['sessions','cart','checkout','completed'].forEach((name,i)=>x[name]+=(Number(String(nums[i]||0).replace(/,/g,''))||0));
+    }
+    for(const r of getRows_('Shopify_Referrers')){
+      const date=String(r.Date||'').slice(0,10),channel=r.Channel;
+      const metrics=[r.Sessions,r.Cart_Additions,r.Reached_Checkout,r.Completed_Checkout];
+      if(r.Period==='day'){
+        addRef('day',date,channel,metrics);
+        addRef('week',monday_(date),channel,metrics);
+        addRef('month',date.slice(0,7),channel,metrics);
+      }else if(r.Period==='week'||r.Period==='month')addRef(r.Period,date,channel,metrics);
+    }
+    const referrers=[...refMap.values()];
+    return out_({ok:true,updatedAt:new Date().toISOString(),rows:[...grouped.values()],layers:{age:ages,gender,campaign:campaigns,funnel,subscribers,flow:[...roll.values()],referrers:referrers}});
   } catch(err) {return out_({ok:false,error:String(err.message||err)});}
 }
 function out_(data){return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);}
