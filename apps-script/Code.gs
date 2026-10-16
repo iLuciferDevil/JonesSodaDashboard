@@ -43,6 +43,16 @@ function doGet(e) {
       aggregate_(grouped,'Google',r.SKU||'Unattributed / Other',r.Date,r.Spend,r.Conversions,r.Conversion_Value,r.Impressions,r.Clicks);
     for(const r of getRows_('Shopify_Sales'))
       aggregate_(grouped,'Shopify',r.SKU||r.Product||'Other',r.Date,0,r.Orders||r.Net_Items,r.Net_Sales,0,0);
+    // Campaign-level daily drilldown. Same source of truth as Meta_Ads.
+    const campaignsDaily=new Map();
+    for(const r of getRows_('Meta_Ads')){
+      const date=String(r.Date||'').slice(0,10),campaign=String(r.Campaign||'Unspecified');
+      if(!date)continue;
+      const key=[date,campaign].join('|');
+      if(!campaignsDaily.has(key))campaignsDaily.set(key,{date:date,campaign:campaign,spend:0,purchases:0,revenue:0,impressions:0,clicks:0,atc:0,checkouts:0,lpv:0});
+      const x=campaignsDaily.get(key);
+      [['spend','Spend'],['purchases','Purchases'],['revenue','Purchase_Value'],['impressions','Impressions'],['clicks','Clicks'],['atc','Add_To_Cart'],['checkouts','Checkouts'],['lpv','Landing_Page_Views']].forEach(k=>x[k[0]]+=(Number(String(r[k[1]]||0).replace(/,/g,''))||0));
+    }
     const ages=getRows_('Meta_Age').map(r=>({'Reporting starts':r.Date,'Campaign name':r.Campaign,'Age':r.Age,'Amount spent (USD)':r.Spend,'Purchases':r.Purchases,'Purchases conversion value':r.Purchase_Value}));
     const gender=getRows_('Meta_Gender').map(r=>({'Reporting starts':r.Date,'Campaign name':r.Campaign,'Gender':r.Gender,'Amount spent (USD)':r.Spend,'Purchases':r.Purchases,'Purchases conversion value':r.Purchase_Value}));
     const campaigns=getRows_('Klaviyo_Campaigns').map(r=>({'Message send date time':r.Send_Date,'Campaign name':r.Campaign,'Conversion value':r.Revenue,'Count of unique conversions':r.Orders,'Total recipients':r.Recipients,'Unique clicks':r.Clicks}));
@@ -78,7 +88,7 @@ function doGet(e) {
       }else if(r.Period==='week'||r.Period==='month')addRef(r.Period,date,channel,metrics);
     }
     const referrers=[...refMap.values()];
-    return out_({ok:true,updatedAt:new Date().toISOString(),rows:[...grouped.values()],layers:{age:ages,gender,campaign:campaigns,funnel,subscribers,flow:[...roll.values()],referrers:referrers}});
+    return out_({ok:true,updatedAt:new Date().toISOString(),rows:[...grouped.values()],layers:{age:ages,gender,campaign:campaigns,funnel,subscribers,flow:[...roll.values()],referrers:referrers,campaignsDaily:[...campaignsDaily.values()]}});
   } catch(err) {return out_({ok:false,error:String(err.message||err)});}
 }
 function out_(data){return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);}
