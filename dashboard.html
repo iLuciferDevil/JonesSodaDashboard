@@ -34,6 +34,7 @@ th{font-size:11px;text-transform:uppercase;color:#695f56}tr:last-child td{border
 </div><div id="status" class="notice">Loading reporting data…</div><div id="kpis" class="kpis"></div></section>
 <section class="card"><h2 id="heading">Performance trend</h2><div id="chart" class="chart"></div><div id="definition" class="muted"></div></section>
 <div class="charts"><section class="card"><h3>Spend and sales value</h3><div id="spendChart"></div></section><section class="card"><h3>Conversion volume</h3><div id="volumeChart"></div></section></div>
+<section class="card" id="campaignDailySection"><h2>Meta campaign performance by day</h2><p class="muted">Daily Meta-reported campaign results. Use the date selector to compare spend, purchases, CPA, attributed revenue and ROAS across campaigns. This is campaign-level data, separate from Shopify sales.</p><div class="controls"><label>Reporting day<select id="campaignDailyDate"></select></label></div><div id="campaignDailySummary" class="muted"></div><div class="scroll"><table id="campaignDailyTable"></table></div></section>
 <section class="card"><h2 id="tableHeading">Performance by period</h2><div class="scroll"><table id="table"></table></div></section>
 <div class="muted">Attribution warning: Meta platform-attributed purchases and Google conversion actions are separate from actual Shopify sales. Never add these conversion totals together. Google CPA is cost per reported conversion until purchase-only conversion actions are verified. Source: historical exported datasets, not a live API feed.</div>
 
@@ -112,6 +113,19 @@ const snapshotReady=(async()=>{try{rows=await unpack(window.JONES_DATA_GZIP);ref
 
 // Wait for the historical snapshot before layering the last ten days, preventing async overwrites.
 snapshotReady.then(async()=>{try{const r=await fetch('/data/daily-last10.json',{cache:'no-store'});if(!r.ok)throw Error('Daily data unavailable');const daily=await r.json();rows=[...rows.filter(r=>r[1]!=='day'),...daily];refreshSKU();render()}catch(e){console.warn('Daily reporting data:',e)}});
+let campaignDailyRecords=[];
+function renderCampaignDaily(){
+ const el=$('campaignDailyDate');
+ if(!el)return;
+ const dates=[...new Set(campaignDailyRecords.map(r=>r.date))].sort().reverse();
+ selectOptions('campaignDailyDate',dates,true);
+ const day=el.value;
+ const selected=campaignDailyRecords.filter(r=>r.date===day).sort((a,b)=>b.spend-a.spend);
+ const total=(key)=>selected.reduce((sum,r)=>sum+(Number(r[key])||0),0);
+ const spend=total('spend'),purchases=total('purchases'),revenue=total('revenue');
+ $('campaignDailySummary').textContent=day?'Date: '+day+' | Spend '+dollar(spend,2)+' | Purchases '+fmt(purchases)+' | CPA '+(purchases?dollar(spend/purchases,2):'N/A')+' | ROAS '+(spend?fmt(revenue/spend,2)+'x':'N/A'):'No campaign-level daily records received yet.';
+ makeTable('campaignDailyTable',[['Campaign','campaign'],['Spend','spend',x=>dollar(x,2)],['Purchases','purchases',number],['CPA','cpa',x=>x===null?'N/A':dollar(x,2)],['Attributed value','revenue',x=>dollar(x,2)],['ROAS','roas',x=>x===null?'N/A':fmt(x,2)+'x'],['Clicks','clicks',number],['ATC','atc',number],['Checkout initiated','checkouts',number]],selected.map(r=>({...r,cpa:r.purchases?r.spend/r.purchases:null,roas:r.spend?r.revenue/r.spend:null})));
+}
 const L={age:[],gender:[],campaign:[],subscribers:[],funnel:[],flow:[]};
 function parseCSV(t){let out=[],r=[],v='',q=false;for(let i=0;i<t.length;i++){let c=t[i];if(c==='"'){if(q&&t[i+1]==='"'){v+='"';i++}else q=!q}else if(c===','&&!q){r.push(v);v=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&t[i+1]==='\n')i++;r.push(v);v='';if(r.some(x=>x.length))out.push(r);r=[]}else v+=c}if(v||r.length){r.push(v);out.push(r)}const heads=out.shift()||[];return out.map(line=>Object.fromEntries(heads.map((h,i)=>[h.trim(),line[i]??''])));}
 const n=v=>Number(String(v??'').replace(/[$,%]/g,'').replace(/,/g,''))||0;
@@ -219,6 +233,7 @@ async function loadLayers(){const inputs=[['age','/data/layers/meta_age.csv'],['
  ['subscriberPeriod','subscriberMetric'].forEach(id=>$(id).addEventListener('change',subscribersView));subscribersView();
  ['funnelPeriod','funnelDate','funnelSource','funnelRateMetric'].forEach(id=>$(id).addEventListener('change',()=>{try{funnelView()}catch(e){showFunnelError(e)}}));funnelView();
  }catch(e){$('demoStatus').textContent='Reporting layers unavailable: '+e.message;console.error(e)}}
+$('campaignDailyDate').addEventListener('change',renderCampaignDaily);
 loadLayers();
 function showFunnelError(error){console.error('Funnel rendering failed',error);$('funnelNotice').textContent='Funnel rendering error: '+String(error.message||error);$('funnelStageRates').innerHTML='<div class="notice">Unable to render this funnel. Other dashboard sections remain available.</div>';}
 async function ensureShopifyFunnel(){
@@ -249,6 +264,7 @@ async function refreshFromGoogleSheets(){
   rows=[...valid,...existingDaily.filter(r=>!valid.some(v=>v[1]==='day'&&v[2]===r[2]&&v[3]===r[3]&&v[4]===r[4]))];
   refreshSKU();render();
   if(j.layers){
+   if(Array.isArray(j.layers.campaignsDaily)){campaignDailyRecords=j.layers.campaignsDaily;renderCampaignDaily()}
    ['age','gender','campaign','funnel','subscribers','flow'].forEach(k=>{if(Array.isArray(j.layers[k]))L[k]=j.layers[k]});
    if(Array.isArray(j.layers.referrers) && j.layers.referrers.length){
      referrerFunnelRows=j.layers.referrers.map(r=>({period:r.period,date:r.date,channel:r.channel==='Facebook/Instagram'?'M':'O',sessions:Number(r.sessions)||0,cart:Number(r.cart)||0,checkout:Number(r.checkout)||0,completed:Number(r.completed)||0}));
